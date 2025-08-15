@@ -1,0 +1,46 @@
+================================================================================
+🔍 AUTOMATED LOG ANALYSIS REPORT
+================================================================================
+Generated: 2025-07-20 02:09:28
+
+📊 SUMMARY
+----------------------------------------
+Files analyzed: 6
+Total errors found: 3
+
+🔴 ERROR BREAKDOWN
+----------------------------------------
+🔴 API: 3 occurrences
+
+🚨 CRITICAL FINDINGS
+----------------------------------------
+1. [API] in debug-output.log
+   [BROWSER ERROR]: TypeError: Failed to fetch
+
+2. [API] in debug-output.log
+   [BROWSER ERROR]: Failed to initialize lookup service: {message: TypeError: Failed to fetch, details: TypeError: Failed to fetch
+
+3. [API] in debug-output.log
+   [BROWSER ERROR]: [getUserJourneyState] Error getting user: AuthRetryableFetchError: Failed to fetch
+
+💡 SUGGESTED ACTIONS
+----------------------------------------
+1. Verify API server is running: check server_output.log
+2. Check CORS configuration in api/server.js
+3. Check authentication tokens in Headers
+4. Verify API endpoint exists in api/routes/
+5. Check if route requires authentication
+
+📅 ERROR TIMELINE (last 5)
+----------------------------------------
+None - [API] Line 119
+None - [API] Line 127
+None - [API] Line 129
+
+🎯 RECOMMENDED NEXT STEPS
+----------------------------------------
+1. Focus on API errors first (most frequent)
+2. Address critical findings immediately
+3. Run tests after implementing fixes
+4. Re-run log analysis to verify fixes
+================================================================================

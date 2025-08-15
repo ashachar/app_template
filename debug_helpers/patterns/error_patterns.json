@@ -1,0 +1,265 @@
+{
+  "database_errors": {
+    "patterns": [
+      "relation.*does not exist",
+      "column.*does not exist",
+      "duplicate key value violates unique constraint",
+      "null value in column.*violates not-null constraint",
+      "foreign key violation",
+      "could not connect to server",
+      "database.*does not exist",
+      "permission denied for (table|schema)",
+      "deadlock detected",
+      "row-level security.*violation"
+    ],
+    "category": "Database",
+    "severity": "high",
+    "suggestions": [
+      "Check if migrations have been run: cd schema && ./run_migration.sh",
+      "Verify database schema matches expectations in schema/sql/structured/",
+      "Check RLS policies are correctly configured",
+      "Verify database connection in .env file",
+      "Check if user has proper permissions"
+    ]
+  },
+  "api_errors": {
+    "patterns": [
+      "Cannot (GET|POST|PUT|DELETE).*40[134]",
+      "401 Unauthorized",
+      "403 Forbidden",
+      "404 Not Found",
+      "500 Internal Server Error",
+      "502 Bad Gateway",
+      "503 Service Unavailable",
+      "ECONNREFUSED",
+      "Request failed with status code",
+      "Network Error",
+      "ERR_CONNECTION_REFUSED",
+      "CORS.*blocked",
+      "blocked by CORS policy",
+      "No 'Access-Control-Allow-Origin'",
+      "Failed to fetch",
+      "net::ERR_FAILED"
+    ],
+    "category": "API",
+    "severity": "high",
+    "suggestions": [
+      "Check authentication tokens in Headers",
+      "Verify API endpoint exists in api/routes/",
+      "Check CORS configuration in api/server.js",
+      "Verify API server is running: check consolidated_logs/latest.log",
+      "Check if route requires authentication"
+    ]
+  },
+  "null_reference_errors": {
+    "patterns": [
+      "Cannot read propert(y|ies).* of null",
+      "Cannot read propert(y|ies).* of undefined",
+      "TypeError:.*is not a function",
+      "Cannot access.*before initialization",
+      "'NoneType' object has no attribute",
+      "undefined is not an object",
+      "null is not an object",
+      "Cannot destructure property"
+    ],
+    "category": "Null Reference",
+    "severity": "medium",
+    "suggestions": [
+      "Add null checks before accessing properties",
+      "Use optional chaining (?.) for safe property access",
+      "Initialize state with proper default values",
+      "Check API response structure matches expectations",
+      "Verify data exists before rendering in React components"
+    ]
+  },
+  "lookup_errors": {
+    "patterns": [
+      "Invalid enum value",
+      "Expected integer.*got string",
+      "department.*is not valid",
+      "employment_type.*invalid",
+      "lookup table.*not found",
+      "invalid input value for enum",
+      "lookup.*index.*not found",
+      "lookupService.*error"
+    ],
+    "category": "Lookup Table",
+    "severity": "medium",
+    "suggestions": [
+      "Verify lookup table indexes are integers per api_agreements.md",
+      "Check lookupService.ts initialization",
+      "Ensure lookup tables are populated: SELECT * FROM lookups.departments",
+      "Verify field is using integer index, not string value",
+      "Check useLookupData hook is properly configured"
+    ]
+  },
+  "timeout_errors": {
+    "patterns": [
+      "timeout.*exceeded",
+      "TimeoutError",
+      "Navigation timeout",
+      "waiting for.*timed out",
+      "Request timeout",
+      "Timeout awaiting.*response",
+      "page.waitForSelector.*timeout",
+      "Promise timed out"
+    ],
+    "category": "Timeout",
+    "severity": "medium",
+    "suggestions": [
+      "Increase timeout values in test configuration",
+      "Check if server is responding slowly",
+      "Verify element selectors are correct",
+      "Check for infinite loops or blocking operations",
+      "Consider using page.waitForLoadState('networkidle')"
+    ]
+  },
+  "file_errors": {
+    "patterns": [
+      "ENOENT.*no such file or directory",
+      "Permission denied",
+      "File not found",
+      "Cannot find module",
+      "ModuleNotFoundError",
+      "Module build failed",
+      "Cannot resolve module",
+      "EACCES.*permission denied"
+    ],
+    "category": "File System",
+    "severity": "high",
+    "suggestions": [
+      "Verify file paths are absolute, not relative",
+      "Check file permissions with ls -la",
+      "Ensure dependencies are installed: npm install",
+      "Verify working directory is correct",
+      "Check if file was accidentally deleted"
+    ]
+  },
+  "lambda_errors": {
+    "patterns": [
+      "Lambda function.*failed",
+      "Task timed out after.*seconds",
+      "Process exited before completing",
+      "ResourceNotFoundException.*function",
+      "AccessDeniedException",
+      "lambda.*deployment.*failed",
+      "InvalidParameterValueException",
+      "ResourceConflictException",
+      "Duration:.*ms.*Billed Duration:",
+      "Max Memory Used:"
+    ],
+    "category": "Lambda",
+    "severity": "high",
+    "suggestions": [
+      "Check CloudWatch logs for detailed Lambda errors",
+      "Verify Lambda deployment: cd backend/lambda && ./deploy.sh",
+      "Check Lambda IAM role has necessary permissions",
+      "Increase Lambda timeout in serverless.yml if needed",
+      "Verify environment variables are set in Lambda"
+    ]
+  },
+  "react_errors": {
+    "patterns": [
+      "Invalid hook call",
+      "React Hook.*called conditionally",
+      "Maximum update depth exceeded",
+      "Objects are not valid as a React child",
+      "Can't perform a React state update",
+      "Too many re-renders",
+      "Missing dependency:.*useEffect",
+      "Expected onClick listener to be a function"
+    ],
+    "category": "React",
+    "severity": "high",
+    "suggestions": [
+      "Check hooks are called at top level of function",
+      "Look for setState calls in render or infinite loops",
+      "Verify useEffect dependencies are correct",
+      "Check for accidental object rendering in JSX",
+      "Use useCallback for event handlers passed as props"
+    ]
+  },
+  "swifit_specific_errors": {
+    "patterns": [
+      "requisition.*not found",
+      "candidate.*not found",
+      "match_results.*error",
+      "resume.*parsing.*failed",
+      "skills.*extraction.*failed",
+      "department.*mismatch",
+      "salary.*validation.*failed",
+      "location.*not recognized"
+    ],
+    "category": "Swifit Business Logic",
+    "severity": "high",
+    "suggestions": [
+      "Check requisition exists in database",
+      "Verify candidate data is properly formatted",
+      "Check matching algorithm Lambda is deployed",
+      "Verify resume parsing service is running",
+      "Check location data against supported locations"
+    ]
+  },
+  "authentication_errors": {
+    "patterns": [
+      "JWT.*expired",
+      "Invalid token",
+      "Token.*not found",
+      "Authentication failed",
+      "Session expired",
+      "Invalid credentials",
+      "User not found",
+      "Password.*incorrect"
+    ],
+    "category": "Authentication",
+    "severity": "high",
+    "suggestions": [
+      "Check if user is logged in before accessing protected routes",
+      "Verify JWT secret is configured correctly",
+      "Check token expiration time",
+      "Ensure test user credentials are correct in .env",
+      "Verify Supabase auth configuration"
+    ]
+  },
+  "build_errors": {
+    "patterns": [
+      "Module build failed",
+      "Syntax error",
+      "Parsing error:",
+      "Unexpected token",
+      "Missing semicolon",
+      "TypeScript error",
+      "Type.*is not assignable",
+      "Property.*does not exist on type"
+    ],
+    "category": "Build/Compilation",
+    "severity": "high",
+    "suggestions": [
+      "Run npm run lint to check for syntax errors",
+      "Check TypeScript types match expected interfaces",
+      "Verify import statements are correct",
+      "Run npm run build to see detailed errors",
+      "Check for missing type definitions"
+    ]
+  },
+  "performance_warnings": {
+    "patterns": [
+      "Slow query detected",
+      "Memory limit exceeded",
+      "Maximum call stack size exceeded",
+      "Out of memory",
+      "CPU usage.*high",
+      "Response time.*exceeded",
+      "Bundle size.*too large"
+    ],
+    "category": "Performance",
+    "severity": "medium",
+    "suggestions": [
+      "Add database indexes for slow queries",
+      "Check for memory leaks in components",
+      "Optimize bundle size with code splitting",
+      "Use React.memo for expensive components",
+      "Profile application to find bottlenecks"
+    ]
+  }
+}

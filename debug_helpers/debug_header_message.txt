@@ -1,0 +1,6 @@
+The issue persists - ultrathink, investigate the below logs THOROUGHLY, do your best to fix based on them.
+If after you read the logs you still need more information to shed light on the problem, consider one or more of the following:
+1. Add more log prints
+2. Provide me a JS script I can run in the dev console as soon as i reproduce the problem. Remember to also copy it to the clipboard yourself (e.g. cat debug_artifacts/analysis_script.js | pbcopy). If you do
+Then restart the server and let me know when you're done so that I'll reproduce the problem and you can continue investigating the logs.
+If you added logs and/or JS script - notify me by putting 📁 and/or 📜 emojis at the end of the inference respectively.

@@ -1,0 +1,82 @@
+================================================================================
+🔍 AUTOMATED LOG ANALYSIS REPORT
+================================================================================
+Generated: 2025-07-19 16:02:39
+
+📊 SUMMARY
+----------------------------------------
+Files analyzed: 6
+Total errors found: 7
+
+🔴 ERROR BREAKDOWN
+----------------------------------------
+🔴 Database: 4 occurrences
+🔴 API: 3 occurrences
+
+🚨 CRITICAL FINDINGS
+----------------------------------------
+1. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+2. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+3. [API] in debug-output.log
+   [BROWSER ERROR]: TypeError: Failed to fetch
+
+4. [API] in debug-output.log
+   [BROWSER ERROR]: Failed to initialize lookup service: {message: TypeError: Failed to fetch, details: TypeError: Failed to fetch
+
+5. [API] in debug-output.log
+   [BROWSER ERROR]: [getUserJourneyState] Error getting user: AuthRetryableFetchError: Failed to fetch
+
+6. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+7. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+💡 SUGGESTED ACTIONS
+----------------------------------------
+1. Check if migrations have been run: cd schema && ./run_migration.sh
+2. Verify database connection in .env file
+3. Verify API endpoint exists in api/routes/
+4. Check authentication tokens in Headers
+5. Verify database schema matches expectations in schema/sql/structured/
+6. Check if route requires authentication
+7. Check CORS configuration in api/server.js
+8. Check if user has proper permissions
+9. Verify API server is running: check server_output.log
+10. Check RLS policies are correctly configured
+11. Database connection issues may be causing API failures
+
+📅 ERROR TIMELINE (last 5)
+----------------------------------------
+None - [Database] Line 74
+None - [Database] Line 74
+None - [API] Line 119
+None - [API] Line 127
+None - [API] Line 129
+
+🔧 PATTERN-BASED SOLUTIONS
+----------------------------------------
+
+1. Error: [1]   message: 'relation "public.resume_generations" does not exist'
+   Pattern: Database (confidence: 95.0%)
+   Solution 1: Run pending database migrations
+              Success rate: 96.8% (31 uses)
+              Verify with: test_database_schema_validity
+
+2. Error: [1]   message: 'relation "public.resume_generations" does not exist'
+   Pattern: Database (confidence: 95.0%)
+   Solution 1: Run pending database migrations
+              Success rate: 96.8% (31 uses)
+              Verify with: test_database_schema_validity
+
+🎯 RECOMMENDED NEXT STEPS
+----------------------------------------
+1. Try the pattern-based solutions above (proven fixes)
+2. Run suggested test cases to verify fixes
+3. Run tests after implementing fixes
+4. Re-run log analysis to verify fixes
+================================================================================

@@ -1,0 +1,2177 @@
+{
+  "patterns": {
+    "lookup_field_type_mismatch_d3f8a2": {
+      "pattern_id": "lookup_field_type_mismatch_d3f8a2",
+      "error_type": "Lookup Table",
+      "error_patterns": [
+        "Expected integer.*got string",
+        "department.*must.*be.*integer",
+        "employment_type.*invalid.*string"
+      ],
+      "context_keywords": [
+        "validation",
+        "api",
+        "job",
+        "create",
+        "update"
+      ],
+      "module_hints": [
+        "api",
+        "form",
+        "validation"
+      ],
+      "solutions": [
+        {
+          "description": "Convert string lookup values to integer IDs before sending to API",
+          "code_changes": [
+            {
+              "file_path": "src/components/JobForm.tsx",
+              "description": "Use lookup ID instead of name",
+              "diff_snippet": "- department: formData.department,\n+ department: parseInt(lookupService.getDepartmentId(formData.department)),",
+              "line_numbers": null
+            },
+            {
+              "file_path": "api/routes/jobs.js",
+              "description": "Add integer validation for lookup fields",
+              "diff_snippet": "+ if (typeof req.body.department !== 'number') {\n+   return res.status(400).json({ error: 'department must be integer' });\n+ }",
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "test_job_api_lookup_field_types"
+          ],
+          "session_ids": [
+            "JOB-137"
+          ],
+          "success_count": 12,
+          "failure_count": 2,
+          "last_used": "2025-07-19T09:37:06.398773"
+        }
+      ],
+      "occurrences": 15,
+      "first_seen": "2024-01-15T10:30:00",
+      "last_seen": "2025-07-19T09:37:06.398773",
+      "related_patterns": [
+        "api_validation_error_a8f3d2"
+      ]
+    },
+    "null_reference_map_b7c9e3": {
+      "pattern_id": "null_reference_map_b7c9e3",
+      "error_type": "Null Reference",
+      "error_patterns": [
+        "Cannot read propert.*map.*of (null|undefined)",
+        "TypeError.*map.*is not a function"
+      ],
+      "context_keywords": [
+        "render",
+        "array",
+        "list",
+        "component"
+      ],
+      "module_hints": [
+        "ui",
+        "react",
+        "component"
+      ],
+      "solutions": [
+        {
+          "description": "Add null check and default empty array",
+          "code_changes": [
+            {
+              "file_path": "src/components/List.tsx",
+              "description": "Add default empty array for null data",
+              "diff_snippet": "- {data.map(item => (\n+ {(data || []).map(item => (",
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "test_list_null_data_handling"
+          ],
+          "session_ids": [
+            "UI-234",
+            "UI-567"
+          ],
+          "success_count": 25,
+          "failure_count": 0,
+          "last_used": "2025-07-18T14:22:00"
+        },
+        {
+          "description": "Initialize state with empty array instead of null",
+          "code_changes": [
+            {
+              "file_path": "src/hooks/useData.ts",
+              "description": "Initialize with empty array",
+              "diff_snippet": "- const [data, setData] = useState(null);\n+ const [data, setData] = useState([]);",
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "test_hook_initial_state"
+          ],
+          "session_ids": [
+            "UI-890"
+          ],
+          "success_count": 18,
+          "failure_count": 1,
+          "last_used": "2025-07-17T11:45:00"
+        }
+      ],
+      "occurrences": 43,
+      "first_seen": "2024-01-10T08:00:00",
+      "last_seen": "2025-07-18T14:22:00",
+      "related_patterns": [
+        "null_reference_property_c8d9f4"
+      ]
+    },
+    "database_relation_not_exist_e4f5a6": {
+      "pattern_id": "database_relation_not_exist_e4f5a6",
+      "error_type": "Database",
+      "error_patterns": [
+        "relation.*does not exist",
+        "ERROR.*42P01.*undefined_table"
+      ],
+      "context_keywords": [
+        "migration",
+        "schema",
+        "table",
+        "database"
+      ],
+      "module_hints": [
+        "database",
+        "migration",
+        "schema"
+      ],
+      "solutions": [
+        {
+          "description": "Run pending database migrations",
+          "code_changes": [
+            {
+              "file_path": "schema/migration.sql",
+              "description": "Execute migration script",
+              "diff_snippet": "cd schema && ./run_migration.sh",
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "test_database_schema_validity"
+          ],
+          "session_ids": [
+            "DB-123",
+            "DB-456"
+          ],
+          "success_count": 30,
+          "failure_count": 1,
+          "last_used": "2025-07-19T08:15:00"
+        }
+      ],
+      "occurrences": 31,
+      "first_seen": "2024-01-05T09:00:00",
+      "last_seen": "2025-07-19T08:15:00",
+      "related_patterns": [
+        "database_column_not_exist_f5g6b7"
+      ]
+    },
+    "auth_token_expired_a1b2c3": {
+      "pattern_id": "auth_token_expired_a1b2c3",
+      "error_type": "Authentication",
+      "error_patterns": [
+        "JWT.*expired",
+        "Token.*expired",
+        "401.*token.*expired"
+      ],
+      "context_keywords": [
+        "auth",
+        "login",
+        "token",
+        "jwt"
+      ],
+      "module_hints": [
+        "auth",
+        "api",
+        "middleware"
+      ],
+      "solutions": [
+        {
+          "description": "Implement token refresh mechanism",
+          "code_changes": [
+            {
+              "file_path": "src/services/auth.ts",
+              "description": "Add token refresh logic",
+              "diff_snippet": "+ if (isTokenExpired(token)) {\n+   token = await refreshToken();\n+ }",
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "test_token_refresh_flow"
+          ],
+          "session_ids": [
+            "AUTH-789"
+          ],
+          "success_count": 15,
+          "failure_count": 0,
+          "last_used": "2025-07-16T13:20:00"
+        }
+      ],
+      "occurrences": 20,
+      "first_seen": "2024-02-01T10:00:00",
+      "last_seen": "2025-07-16T13:20:00",
+      "related_patterns": [
+        "auth_invalid_token_b2c3d4"
+      ]
+    },
+    "database_5724e4": {
+      "pattern_id": "database_5724e4",
+      "error_type": "Database",
+      "error_patterns": [
+        "relation.*does not exist",
+        "column.*does not exist",
+        "duplicate key value violates unique constraint",
+        "null value in column.*violates not-null constraint",
+        "foreign key violation",
+        "could not connect to server",
+        "database.*does not exist",
+        "permission denied for (table|schema)",
+        "deadlock detected",
+        "row-level security.*violation"
+      ],
+      "context_keywords": [
+        "violates",
+        "column",
+        "database",
+        "relation",
+        "security",
+        "duplicate",
+        "detected",
+        "denied",
+        "could",
+        "permission"
+      ],
+      "module_hints": [
+        "database",
+        "migration",
+        "schema"
+      ],
+      "solutions": [
+        {
+          "description": "Check if migrations have been run: cd schema && ./run_migration.sh",
+          "code_changes": [
+            {
+              "file_path": "terminal",
+              "description": "Check if migrations have been run: cd schema && ./run_migration.sh",
+              "diff_snippet": "Check if migrations have been run: cd schema && ./run_migration.sh",
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.547331"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.547307",
+      "last_seen": "2025-07-19T10:20:16.547328",
+      "related_patterns": []
+    },
+    "api_b82ecf": {
+      "pattern_id": "api_b82ecf",
+      "error_type": "API",
+      "error_patterns": [
+        "Cannot (GET|POST|PUT|DELETE).*40[134]",
+        "401 Unauthorized",
+        "403 Forbidden",
+        "404 Not Found",
+        "500 Internal Server Error",
+        "502 Bad Gateway",
+        "503 Service Unavailable",
+        "ECONNREFUSED",
+        "Request failed with status code",
+        "Network Error",
+        "ERR_CONNECTION_REFUSED",
+        "CORS.*blocked",
+        "blocked by CORS policy",
+        "No 'Access-Control-Allow-Origin'",
+        "Failed to fetch",
+        "net::ERR_FAILED"
+      ],
+      "context_keywords": [
+        "unauthorized",
+        "gateway",
+        "status",
+        "err_failed",
+        "cors",
+        "blocked",
+        "fetch",
+        "allow",
+        "service",
+        "post"
+      ],
+      "module_hints": [
+        "api",
+        "routes",
+        "middleware"
+      ],
+      "solutions": [
+        {
+          "description": "Check authentication tokens in Headers",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.548446"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.548441",
+      "last_seen": "2025-07-19T10:20:16.548444",
+      "related_patterns": []
+    },
+    "null_reference_ef4b19": {
+      "pattern_id": "null_reference_ef4b19",
+      "error_type": "Null Reference",
+      "error_patterns": [
+        "Cannot read propert(y|ies).* of null",
+        "Cannot read propert(y|ies).* of undefined",
+        "TypeError:.*is not a function",
+        "Cannot access.*before initialization",
+        "'NoneType' object has no attribute",
+        "undefined is not an object",
+        "null is not an object",
+        "Cannot destructure property"
+      ],
+      "context_keywords": [
+        "access",
+        "propert",
+        "property",
+        "undefined",
+        "typeerror",
+        "function",
+        "nonetype",
+        "object",
+        "read",
+        "attribute"
+      ],
+      "module_hints": [],
+      "solutions": [
+        {
+          "description": "Add null checks before accessing properties",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.549906"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.549902",
+      "last_seen": "2025-07-19T10:20:16.549905",
+      "related_patterns": []
+    },
+    "lookup_table_4bc33a": {
+      "pattern_id": "lookup_table_4bc33a",
+      "error_type": "Lookup Table",
+      "error_patterns": [
+        "Invalid enum value",
+        "Expected integer.*got string",
+        "department.*is not valid",
+        "employment_type.*invalid",
+        "lookup table.*not found",
+        "invalid input value for enum",
+        "lookup.*index.*not found",
+        "lookupService.*error"
+      ],
+      "context_keywords": [
+        "employment_type",
+        "found",
+        "lookupservice",
+        "index",
+        "string",
+        "enum",
+        "value",
+        "valid",
+        "expected",
+        "table"
+      ],
+      "module_hints": [],
+      "solutions": [
+        {
+          "description": "Verify lookup table indexes are integers per api_agreements.md",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.551523"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.551519",
+      "last_seen": "2025-07-19T10:20:16.551522",
+      "related_patterns": []
+    },
+    "timeout_14ea56": {
+      "pattern_id": "timeout_14ea56",
+      "error_type": "Timeout",
+      "error_patterns": [
+        "timeout.*exceeded",
+        "TimeoutError",
+        "Navigation timeout",
+        "waiting for.*timed out",
+        "Request timeout",
+        "Timeout awaiting.*response",
+        "page.waitForSelector.*timeout",
+        "Promise timed out"
+      ],
+      "context_keywords": [
+        "timeouterror",
+        "navigation",
+        "waitforselector",
+        "response",
+        "timeout",
+        "promise",
+        "waiting",
+        "awaiting",
+        "page",
+        "exceeded"
+      ],
+      "module_hints": [],
+      "solutions": [
+        {
+          "description": "Increase timeout values in test configuration",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.553123"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.553119",
+      "last_seen": "2025-07-19T10:20:16.553122",
+      "related_patterns": []
+    },
+    "file_system_36a866": {
+      "pattern_id": "file_system_36a866",
+      "error_type": "File System",
+      "error_patterns": [
+        "ENOENT.*no such file or directory",
+        "Permission denied",
+        "File not found",
+        "Cannot find module",
+        "ModuleNotFoundError",
+        "Module build failed",
+        "Cannot resolve module",
+        "EACCES.*permission denied"
+      ],
+      "context_keywords": [
+        "enoent",
+        "found",
+        "resolve",
+        "file",
+        "directory",
+        "modulenotfounderror",
+        "such",
+        "module",
+        "eacces",
+        "find"
+      ],
+      "module_hints": [
+        "filesystem",
+        "io"
+      ],
+      "solutions": [
+        {
+          "description": "Verify file paths are absolute, not relative",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.554931"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.554927",
+      "last_seen": "2025-07-19T10:20:16.554930",
+      "related_patterns": []
+    },
+    "lambda_5510fb": {
+      "pattern_id": "lambda_5510fb",
+      "error_type": "Lambda",
+      "error_patterns": [
+        "Lambda function.*failed",
+        "Task timed out after.*seconds",
+        "Process exited before completing",
+        "ResourceNotFoundException.*function",
+        "AccessDeniedException",
+        "lambda.*deployment.*failed",
+        "InvalidParameterValueException",
+        "ResourceConflictException",
+        "Duration:.*ms.*Billed Duration:",
+        "Max Memory Used:"
+      ],
+      "context_keywords": [
+        "process",
+        "deployment",
+        "exited",
+        "invalidparametervalueexception",
+        "timed",
+        "function",
+        "duration",
+        "before",
+        "memory",
+        "after"
+      ],
+      "module_hints": [
+        "lambda",
+        "serverless",
+        "aws"
+      ],
+      "solutions": [
+        {
+          "description": "Check CloudWatch logs for detailed Lambda errors",
+          "code_changes": [
+            {
+              "file_path": "terminal",
+              "description": "Verify Lambda deployment: cd backend/lambda && ./deploy.sh",
+              "diff_snippet": "Verify Lambda deployment: cd backend/lambda && ./deploy.sh",
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.556755"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.556750",
+      "last_seen": "2025-07-19T10:20:16.556753",
+      "related_patterns": []
+    },
+    "react_39eae3": {
+      "pattern_id": "react_39eae3",
+      "error_type": "React",
+      "error_patterns": [
+        "Invalid hook call",
+        "React Hook.*called conditionally",
+        "Maximum update depth exceeded",
+        "Objects are not valid as a React child",
+        "Can't perform a React state update",
+        "Too many re-renders",
+        "Missing dependency:.*useEffect",
+        "Expected onClick listener to be a function"
+      ],
+      "context_keywords": [
+        "child",
+        "called",
+        "state",
+        "valid",
+        "many",
+        "listener",
+        "perform",
+        "missing",
+        "function",
+        "dependency"
+      ],
+      "module_hints": [
+        "ui",
+        "component",
+        "react"
+      ],
+      "solutions": [
+        {
+          "description": "Check hooks are called at top level of function",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.558898"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.558894",
+      "last_seen": "2025-07-19T10:20:16.558896",
+      "related_patterns": []
+    },
+    "swifit_business_logic_310ef8": {
+      "pattern_id": "swifit_business_logic_310ef8",
+      "error_type": "Swifit Business Logic",
+      "error_patterns": [
+        "requisition.*not found",
+        "candidate.*not found",
+        "match_results.*error",
+        "resume.*parsing.*failed",
+        "skills.*extraction.*failed",
+        "department.*mismatch",
+        "salary.*validation.*failed",
+        "location.*not recognized"
+      ],
+      "context_keywords": [
+        "salary",
+        "found",
+        "candidate",
+        "recognized",
+        "parsing",
+        "validation",
+        "skills",
+        "extraction",
+        "location",
+        "requisition"
+      ],
+      "module_hints": [],
+      "solutions": [
+        {
+          "description": "Check requisition exists in database",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.561680"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.561676",
+      "last_seen": "2025-07-19T10:20:16.561678",
+      "related_patterns": []
+    },
+    "authentication_4b75d2": {
+      "pattern_id": "authentication_4b75d2",
+      "error_type": "Authentication",
+      "error_patterns": [
+        "JWT.*expired",
+        "Invalid token",
+        "Token.*not found",
+        "Authentication failed",
+        "Session expired",
+        "Invalid credentials",
+        "User not found",
+        "Password.*incorrect"
+      ],
+      "context_keywords": [
+        "credentials",
+        "found",
+        "password",
+        "incorrect",
+        "authentication",
+        "expired",
+        "session",
+        "user",
+        "token"
+      ],
+      "module_hints": [
+        "auth",
+        "login",
+        "session"
+      ],
+      "solutions": [
+        {
+          "description": "Check if user is logged in before accessing protected routes",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.564407"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.564404",
+      "last_seen": "2025-07-19T10:20:16.564406",
+      "related_patterns": []
+    },
+    "build/compilation_533d42": {
+      "pattern_id": "build/compilation_533d42",
+      "error_type": "Build/Compilation",
+      "error_patterns": [
+        "Module build failed",
+        "Syntax error",
+        "Parsing error:",
+        "Unexpected token",
+        "Missing semicolon",
+        "TypeScript error",
+        "Type.*is not assignable",
+        "Property.*does not exist on type"
+      ],
+      "context_keywords": [
+        "syntax",
+        "property",
+        "parsing",
+        "typescript",
+        "semicolon",
+        "assignable",
+        "module",
+        "type",
+        "unexpected",
+        "build"
+      ],
+      "module_hints": [],
+      "solutions": [
+        {
+          "description": "Run npm run lint to check for syntax errors",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.567318"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.567315",
+      "last_seen": "2025-07-19T10:20:16.567317",
+      "related_patterns": []
+    },
+    "performance_650c7f": {
+      "pattern_id": "performance_650c7f",
+      "error_type": "Performance",
+      "error_patterns": [
+        "Slow query detected",
+        "Memory limit exceeded",
+        "Maximum call stack size exceeded",
+        "Out of memory",
+        "CPU usage.*high",
+        "Response time.*exceeded",
+        "Bundle size.*too large"
+      ],
+      "context_keywords": [
+        "detected",
+        "memory",
+        "stack",
+        "slow",
+        "usage",
+        "response",
+        "call",
+        "maximum",
+        "large",
+        "time"
+      ],
+      "module_hints": [],
+      "solutions": [
+        {
+          "description": "Add database indexes for slow queries",
+          "code_changes": [],
+          "test_cases": [],
+          "session_ids": [
+            "import_error_patterns"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.570259"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.570256",
+      "last_seen": "2025-07-19T10:20:16.570258",
+      "related_patterns": []
+    },
+    "api_386653": {
+      "pattern_id": "api_386653",
+      "error_type": "API",
+      "error_patterns": [
+        "API\\ expects\\ integer\\ for\\ department\\ but\\ receives\\ string",
+        "expects.*integer.*department.*receives.*string"
+      ],
+      "context_keywords": [
+        "multiple",
+        "tests",
+        "show",
+        "department",
+        "field",
+        "type",
+        "mismatch"
+      ],
+      "module_hints": [],
+      "solutions": [
+        {
+          "description": "Update form to send department ID instead of name",
+          "code_changes": [],
+          "test_cases": [
+            "discovered_tests"
+          ],
+          "session_ids": [
+            "JOB-137"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.594627"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.594623",
+      "last_seen": "2025-07-19T10:20:16.594626",
+      "related_patterns": []
+    },
+    "test_failure_9e3838": {
+      "pattern_id": "test_failure_9e3838",
+      "error_type": "Test Failure",
+      "error_patterns": [
+        "Department\\ validation\\ failed",
+        "Department.*validation.*failed"
+      ],
+      "context_keywords": [
+        "parallel_results",
+        "execution"
+      ],
+      "module_hints": [
+        "execution"
+      ],
+      "solutions": [],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.598253",
+      "last_seen": "2025-07-19T10:20:16.598256",
+      "related_patterns": []
+    },
+    "unknown_bfd8b5": {
+      "pattern_id": "unknown_bfd8b5",
+      "error_type": "Unknown",
+      "error_patterns": [
+        "Frontend\\ validation\\ missing\\ for\\ salary_range\\ and\\ experience_level",
+        "Frontend.*validation.*missing.*salary_range.*experience_level"
+      ],
+      "context_keywords": [
+        "returns",
+        "with",
+        "missing",
+        "fields",
+        "that",
+        "should",
+        "validated",
+        "client",
+        "side"
+      ],
+      "module_hints": [
+        "ui"
+      ],
+      "solutions": [
+        {
+          "description": "Add required field validation in JobCreationForm component",
+          "code_changes": [
+            {
+              "file_path": "src/components/JobCreationForm.tsx",
+              "description": "Related file in fix",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/validators/job.ts",
+              "description": "Related file in fix",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [],
+          "session_ids": [
+            "JOB-773"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:20:16.589880"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:20:16.589875",
+      "last_seen": "2025-07-19T10:20:16.589878",
+      "related_patterns": []
+    },
+    "database_d3aae6": {
+      "pattern_id": "database_d3aae6",
+      "error_type": "Database",
+      "error_patterns": [
+        "relation\\ \"job_applications\"\\ does\\ not\\ exist",
+        "relation.*job_applications.*does.*exist"
+      ],
+      "context_keywords": [
+        "migration",
+        "table",
+        "postgres"
+      ],
+      "module_hints": [
+        "database",
+        "schema"
+      ],
+      "solutions": [
+        {
+          "description": "Run pending database migrations to create missing table",
+          "code_changes": [
+            {
+              "file_path": "terminal",
+              "description": "Execute migration script",
+              "diff_snippet": "cd schema && ./run_migration.sh",
+              "line_numbers": null
+            },
+            {
+              "file_path": "schema/migrations/add_job_applications.sql",
+              "description": "Ensure migration file exists",
+              "diff_snippet": "CREATE TABLE job_applications (...);",
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "test_job_applications_table_exists"
+          ],
+          "session_ids": [
+            "DEMO-001",
+            "DEMO-002"
+          ],
+          "success_count": 1,
+          "failure_count": 0,
+          "last_used": "2025-07-19T10:37:21.836131"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T10:37:21.834708",
+      "last_seen": "2025-07-19T10:37:21.834715",
+      "related_patterns": []
+    },
+    "configuration_6db4d8": {
+      "pattern_id": "configuration_6db4d8",
+      "error_type": "Configuration",
+      "error_patterns": [
+        "Found\\ invalid\\ settings\\ files",
+        "Found.*invalid.*settings.*files"
+      ],
+      "context_keywords": [
+        "claude",
+        "settings",
+        "permissions",
+        "invalid"
+      ],
+      "module_hints": [
+        "claude-cli",
+        "settings.json"
+      ],
+      "solutions": [
+        {
+          "description": "Fix permission format from plain command to Bash(command:*) format",
+          "code_changes": [
+            {
+              "file_path": "~/.claude/settings.json",
+              "description": "Change \"grep\" to \"Bash(grep:*)\" in permissions.allow array",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/test_claude_settings_validation.py"
+          ],
+          "session_ids": [
+            "DEBUG-claude-settings"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-19T16:02:54.532279"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T16:02:54.532268",
+      "last_seen": "2025-07-19T16:02:54.532276",
+      "related_patterns": []
+    },
+    "ui_f28a14": {
+      "pattern_id": "ui_f28a14",
+      "error_type": "UI",
+      "error_patterns": [
+        "Error\\ toast\\ shown\\ when\\ bulk\\ deleting\\ jobs\\ despite\\ successful\\ deletion",
+        "Error.*toast.*shown.*when.*bulk"
+      ],
+      "context_keywords": [
+        "bulk",
+        "delete",
+        "jobs",
+        "toast",
+        "error",
+        "single",
+        "selected"
+      ],
+      "module_hints": [
+        "ui",
+        "recruiter",
+        "jobs"
+      ],
+      "solutions": [
+        {
+          "description": "Use unified deleteJobs API for all bulk deletions instead of special-casing single job",
+          "code_changes": [
+            {
+              "file_path": "src/pages/recruiter/Jobs.tsx",
+              "description": "Modified handleDeleteSelectedJobs to always use deleteJobs() API",
+              "diff_snippet": "- if (jobToDelete.id.includes(',')) {\n-   const jobIds = jobToDelete.id.split(',');\n-   // ... bulk delete logic\n- } else {\n-   // Single job delete\n-   await handleDeleteJob();\n- }\n+ // Always use bulk delete API, even for single job\n+ const jobIds = jobToDelete.id.includes(',') ? jobToDelete.id.split(',') : [jobToDelete.id];\n+ // ... unified delete logic using deleteJobs(jobIds)",
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "test_bulk_job_deletion_fix"
+          ],
+          "session_ids": [
+            "c0e933dc-d401-47f2-9094-10b01f7b99cc"
+          ],
+          "success_count": 1,
+          "failure_count": 0,
+          "last_used": "2025-07-19T16:21:12.384081"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-19T16:21:12.381903",
+      "last_seen": "2025-07-19T16:21:12.381910",
+      "related_patterns": []
+    },
+    "ui_3a2963": {
+      "pattern_id": "ui_3a2963",
+      "error_type": "UI",
+      "error_patterns": [
+        "Success\\ toast\\ shows\\ before\\ error\\ toast\\ in\\ bulk\\ operations",
+        "Success.*toast.*shows.*before.*error"
+      ],
+      "context_keywords": [
+        "bulk delete",
+        "optimistic UI",
+        "toast",
+        "success before error"
+      ],
+      "module_hints": [
+        "Jobs.tsx",
+        "handleDeleteSelectedJobs",
+        "toast notifications"
+      ],
+      "solutions": [
+        {
+          "description": "Move success toast to show ONLY after API confirms success. Remove optimistic UI update for toasts.",
+          "code_changes": [
+            {
+              "file_path": "src/pages/recruiter/Jobs.tsx",
+              "description": "Move toast() call to after API response check, only show on success",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/test_bulk_delete_toast_fix.py"
+          ],
+          "session_ids": [
+            "BULK194"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-20T01:49:17.517005"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-20T01:49:17.516999",
+      "last_seen": "2025-07-20T01:49:17.517002",
+      "related_patterns": []
+    },
+    "routing_ca3a32": {
+      "pattern_id": "routing_ca3a32",
+      "error_type": "Routing",
+      "error_patterns": [
+        "user\\ tries\\ to\\ login\\ redirected\\ to\\ 404",
+        "user.*tries.*login.*redirected"
+      ],
+      "context_keywords": [
+        "login",
+        "redirect",
+        "404",
+        "explore",
+        "authentication"
+      ],
+      "module_hints": [
+        "auth",
+        "routing",
+        "login"
+      ],
+      "solutions": [
+        {
+          "description": "Fix login redirect to use role-based routes instead of non-existent /explore",
+          "code_changes": [
+            {
+              "file_path": "src/pages/auth/Login.tsx",
+              "description": "Changed default redirect from /explore to role-based routes (/candidate/explore or /recruiter/home)",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/test_login_redirect_fix_complete.py"
+          ],
+          "session_ids": [
+            "LOGI265"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-20T02:19:54.375469"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-20T02:19:54.375463",
+      "last_seen": "2025-07-20T02:19:54.375467",
+      "related_patterns": []
+    },
+    "api_6cd74f": {
+      "pattern_id": "api_6cd74f",
+      "error_type": "API",
+      "error_patterns": [
+        "bulk_delete_partial_X_X",
+        "bulk_delete_partial_X_X"
+      ],
+      "context_keywords": [
+        "supabase",
+        "204",
+        "bulk delete",
+        "toast",
+        "deleteJobs"
+      ],
+      "module_hints": [
+        "api",
+        "recruiterCandidatesApi"
+      ],
+      "solutions": [
+        {
+          "description": "Handle Supabase 204 No Content response correctly - null updateData is success, not error",
+          "code_changes": [
+            {
+              "file_path": "src/api/recruiterCandidatesApi.ts",
+              "description": "Check if updateData is null (204 response) before counting results",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/test_bulk_delete_no_error_toast.spec.ts"
+          ],
+          "session_ids": [
+            "BULK796"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-20T16:07:56.248812"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-20T16:07:56.248802",
+      "last_seen": "2025-07-20T16:07:56.248809",
+      "related_patterns": []
+    },
+    "ui_c1bf16": {
+      "pattern_id": "ui_c1bf16",
+      "error_type": "UI",
+      "error_patterns": [
+        "Candidate\\ cards\\ showing\\ placeholder\\ text\\ like\\ \"[\\\\/][^\\s\\\\/]+[\\\\/] a\\ professional\"",
+        "Candidate.*cards.*showing.*placeholder.*text"
+      ],
+      "context_keywords": [
+        "hunt",
+        "candidate",
+        "placeholder",
+        "empty name",
+        "missing data"
+      ],
+      "module_hints": [
+        "hunt",
+        "recruiterCandidatesApi",
+        "getHuntedCandidates"
+      ],
+      "solutions": [
+        {
+          "description": "Fixed candidate name parsing and summary generation to handle empty/missing names properly",
+          "code_changes": [
+            {
+              "file_path": "src/api/recruiterCandidatesApi.ts",
+              "description": "Enhanced name parsing to extract from email if name is empty, and improved summary generation to avoid malformed text",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/hunt_candidate_info_fix.spec.ts"
+          ],
+          "session_ids": [
+            "HUNT664"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-21T17:07:36.616773"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-21T17:07:36.616763",
+      "last_seen": "2025-07-21T17:07:36.616771",
+      "related_patterns": []
+    },
+    "javascript_778f59": {
+      "pattern_id": "javascript_778f59",
+      "error_type": "JavaScript",
+      "error_patterns": [
+        "Converting\\ circular\\ structure\\ to\\ JSON",
+        "Converting.*circular.*structure.*JSON"
+      ],
+      "context_keywords": [
+        "console.log",
+        "DOM elements",
+        "SVGElement",
+        "HTMLElement",
+        "React fiber"
+      ],
+      "module_hints": [
+        "console override",
+        "logging",
+        "serialization"
+      ],
+      "solutions": [
+        {
+          "description": "Use WeakSet to track circular references and custom replacer function to handle DOM elements",
+          "code_changes": [
+            {
+              "file_path": "src/App.tsx",
+              "description": "Added custom JSON serialization with circular reference handling",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/circular_json_fix_verified.spec.js"
+          ],
+          "session_ids": [
+            "CIRC340"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-22T13:19:20.427639"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-22T13:19:20.427617",
+      "last_seen": "2025-07-22T13:19:20.427636",
+      "related_patterns": []
+    },
+    "ui_dc8a4a": {
+      "pattern_id": "ui_dc8a4a",
+      "error_type": "UI",
+      "error_patterns": [
+        "dropdown\\ values\\ not\\ clickable",
+        "dropdown.*values.*clickable"
+      ],
+      "context_keywords": [
+        "experience",
+        "level",
+        "filter",
+        "dropdown",
+        "matches",
+        "hunt",
+        "not clickable"
+      ],
+      "module_hints": [
+        "ui",
+        "filter",
+        "dropdown"
+      ],
+      "solutions": [
+        {
+          "description": "Experience level filter was missing from Hunt page and database schema was incomplete",
+          "code_changes": [
+            {
+              "file_path": "schema/migration_add_experience_level_to_candidates.sql",
+              "description": "Add experience_level field to candidates table",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/api/utils/supabaseQueries.ts",
+              "description": "Include experience_level in candidate SELECT query",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/pages/recruiter/Hunt.tsx",
+              "description": "Add experience level filter UI and logic",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/unit/ui/select_experience_level_in_matches_page.spec.ts",
+            "tests/integration/test_experience_filter_visual_proof_UI-F854.spec.ts"
+          ],
+          "session_ids": [
+            "UI-F854"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-22T16:06:46.690496"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-22T16:06:46.690486",
+      "last_seen": "2025-07-22T16:06:46.690494",
+      "related_patterns": []
+    },
+    "data_b434bd": {
+      "pattern_id": "data_b434bd",
+      "error_type": "Data",
+      "error_patterns": [
+        "Skill\\ search\\ not\\ finding\\ skills\\ that\\ exist\\ in\\ database",
+        "Skill.*search.*finding.*skills.*that"
+      ],
+      "context_keywords": [
+        "skill",
+        "search",
+        "dropdown",
+        "filter",
+        "hardcoded",
+        "database",
+        "matches",
+        "recruiter"
+      ],
+      "module_hints": [
+        "useMatchedCandidatesLogic",
+        "MatchesSearch",
+        "MatchesFilterBar",
+        "SearchableFilterDropdown"
+      ],
+      "solutions": [
+        {
+          "description": "Replace hardcoded skills with database-driven skills using getAllSkillTags() from useLookupData hook",
+          "code_changes": [
+            {
+              "file_path": "src/hooks/useMatchedCandidatesLogic.ts",
+              "description": "Add getAllSkillTags to useLookupData destructuring and load skills from DB in useEffect",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/pages/recruiter/MatchesSearch.tsx",
+              "description": "Add useEffect to update filteredSkills when skills are loaded from database",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/skill_search_bug_SEAR497.spec.js",
+            "tests/integration/skill_search_fix_verification_SEAR497.spec.js"
+          ],
+          "session_ids": [
+            "SEAR497"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-22T18:12:22.568696"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-22T18:12:22.568680",
+      "last_seen": "2025-07-22T18:12:22.568693",
+      "related_patterns": []
+    },
+    "ui_d21395": {
+      "pattern_id": "ui_d21395",
+      "error_type": "UI",
+      "error_patterns": [
+        "Filter\\ not\\ affecting\\ displayed\\ results",
+        "Filter.*affecting.*displayed.*results"
+      ],
+      "context_keywords": [
+        "years of experience",
+        "filter",
+        "Hunt",
+        "matches",
+        "candidates",
+        "undefined variables"
+      ],
+      "module_hints": [
+        "Hunt.tsx",
+        "recruiter/matches",
+        "filteredCandidates"
+      ],
+      "solutions": [
+        {
+          "description": "Replace undefined filter variables with actual filter logic implementation",
+          "code_changes": [
+            {
+              "file_path": "src/pages/recruiter/Hunt.tsx",
+              "description": "Define passesJobFilter, passesTimeFilter, passesExpFilter variables with proper filter logic at lines 149-153",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/test_hunt_years_experience_filter.spec.js"
+          ],
+          "session_ids": [
+            "FILT414"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-22T19:04:49.484906"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-22T19:04:49.484895",
+      "last_seen": "2025-07-22T19:04:49.484904",
+      "related_patterns": []
+    },
+    "ui_filter_28a900": {
+      "pattern_id": "ui_filter_28a900",
+      "error_type": "UI_FILTER",
+      "error_patterns": [
+        "Years\\ of\\ experience\\ filter\\ not\\ affecting\\ candidate\\ list",
+        "Years.*experience.*filter.*affecting.*candidate"
+      ],
+      "context_keywords": [
+        "filter",
+        "years",
+        "experience",
+        "candidates",
+        "matches",
+        "recruiter"
+      ],
+      "module_hints": [
+        "useMatchedCandidatesLogic",
+        "MatchesSearch",
+        "candidates"
+      ],
+      "solutions": [
+        {
+          "description": "Add years_of_experience column to candidates table and implement client-side filtering in useMatchedCandidatesLogic hook",
+          "code_changes": [
+            {
+              "file_path": "schema/sql/structured/tables/public/candidates.sql",
+              "description": "Added years_of_experience INTEGER column to candidates table with default value 0",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/hooks/useMatchedCandidatesLogic.ts",
+              "description": "Modified hook to accept yearsOfExperienceMin/Max parameters and added filtering logic after line 272",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/pages/recruiter/MatchesSearch.tsx",
+              "description": "Updated useMatchedCandidatesLogic call to pass years filter parameters when range is selected",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/test_yoe_filter_verify_fix.spec.js"
+          ],
+          "session_ids": [
+            "YOE-FILTER-FIX"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-22T20:09:28.253009"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-22T20:09:28.252989",
+      "last_seen": "2025-07-22T20:09:28.253005",
+      "related_patterns": []
+    },
+    "storage_aac27b": {
+      "pattern_id": "storage_aac27b",
+      "error_type": "Storage",
+      "error_patterns": [
+        "University\\ logo\\ not\\ rendering\\ despite\\ existing\\ in\\ bucket",
+        "University.*logo.*rendering.*despite.*existing"
+      ],
+      "context_keywords": [
+        "logo",
+        "not rendering",
+        "educational-institutions-logo",
+        "supabase",
+        "storage"
+      ],
+      "module_hints": [
+        "useUniversityLogoUrl",
+        "EducationInstitutionLogo"
+      ],
+      "solutions": [
+        {
+          "description": "Fixed double slash in storage URL path by removing leading slash from getPublicUrl parameter",
+          "code_changes": [
+            {
+              "file_path": "src/hooks/useUniversityLogoUrlSimple.ts",
+              "description": "Changed .getPublicUrl(`/${filename}`) to .getPublicUrl(filename)",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "Navigate to candidate page with university education and verify logo appears"
+          ],
+          "session_ids": [
+            "LOGO-DEBUG"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-23T14:23:23.050501"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-23T14:23:23.050496",
+      "last_seen": "2025-07-23T14:23:23.050499",
+      "related_patterns": []
+    },
+    "smtp_79a7ca": {
+      "pattern_id": "smtp_79a7ca",
+      "error_type": "SMTP",
+      "error_patterns": [
+        "Missing\\ credentials\\ for\\ \"PLAIN\"",
+        "Missing.*credentials.*PLAIN"
+      ],
+      "context_keywords": [
+        "email",
+        "smtp",
+        "nodemailer",
+        "credentials",
+        "authentication"
+      ],
+      "module_hints": [
+        "send-email.js",
+        "messagesApi.ts",
+        "chat"
+      ],
+      "solutions": [
+        {
+          "description": "Fix SMTP credential environment variable name mismatch. Code expects SMTP_PASSWORD but .env file uses SMTP_PASS.",
+          "code_changes": [
+            {
+              "file_path": "api/send-email.js",
+              "description": "Changed process.env.SMTP_PASSWORD to process.env.SMTP_PASS in nodemailer configuration",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "debug_artifacts/test_email_fix.js"
+          ],
+          "session_ids": [
+            "EMAI429"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-23T16:40:29.683457"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-23T16:40:29.683446",
+      "last_seen": "2025-07-23T16:40:29.683455",
+      "related_patterns": []
+    },
+    "api_7ca62a": {
+      "pattern_id": "api_7ca62a",
+      "error_type": "API",
+      "error_patterns": [
+        "AI\\ message\\ generates\\ \"Thanks\\ for\\ your\\ response\"\\ for\\ initial\\ outreach",
+        "message.*generates.*Thanks.*your.*response"
+      ],
+      "context_keywords": [
+        "lambda",
+        "chat",
+        "message",
+        "generation",
+        "conversation",
+        "history",
+        "recruiter",
+        "candidate"
+      ],
+      "module_hints": [
+        "ChatSidebar",
+        "aiMessageApi",
+        "Lambda"
+      ],
+      "solutions": [
+        {
+          "description": "Fixed Lambda to check for candidate messages AND resolved CORS issue preventing Lambda execution",
+          "code_changes": [
+            {
+              "file_path": "backend/lambda/chat_message_lambda.py",
+              "description": "Added has_candidate_messages check + removed duplicate CORS headers",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "app/src/api/aiMessageApi.ts",
+              "description": "Fixed fallback template logic to check for candidate responses",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "backend/lambda/test_lambda_with_58_messages.py",
+            "app/debug_artifacts/test_final_fix.py"
+          ],
+          "session_ids": [
+            "AI_MSG_COMPLETE_2025"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-25T10:50:34.665351"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-25T10:50:34.665344",
+      "last_seen": "2025-07-25T10:50:34.665349",
+      "related_patterns": []
+    },
+    "cors_60c06f": {
+      "pattern_id": "cors_60c06f",
+      "error_type": "CORS",
+      "error_patterns": [
+        "The\\ Access[\\\\/][^\\s\\\\/]+[\\\\/]-Allow[\\\\/][^\\s\\\\/]+[\\\\/] header\\ contains\\ multiple\\ values\\ [\\\\/][^\\s\\\\/]+[\\\\/] [\\\\/][^\\s\\\\/]+[\\\\/] but\\ only\\ one\\ is\\ allowed",
+        "Access.*Control.*Allow.*Origin.*header"
+      ],
+      "context_keywords": [
+        "lambda",
+        "cors",
+        "duplicate",
+        "header",
+        "access-control-allow-origin"
+      ],
+      "module_hints": [
+        "Lambda",
+        "Function URL",
+        "CORS"
+      ],
+      "solutions": [
+        {
+          "description": "Remove CORS headers from Lambda response when using Lambda Function URLs - they handle CORS automatically",
+          "code_changes": [
+            {
+              "file_path": "backend/lambda/chat_message_lambda.py",
+              "description": "Removed Access-Control-Allow-Origin header from Lambda response",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "app/debug_artifacts/test_final_fix.py"
+          ],
+          "session_ids": [
+            "CORS_FIX_2025"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-25T10:50:34.656695"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-25T10:50:34.656684",
+      "last_seen": "2025-07-25T10:50:34.656693",
+      "related_patterns": []
+    },
+    "ui_f368e6": {
+      "pattern_id": "ui_f368e6",
+      "error_type": "UI",
+      "error_patterns": [
+        "Avatar\\ inconsistency\\ [\\\\/][^\\s\\\\/]+[\\\\/] switches\\ between\\ image\\ and\\ initials",
+        "Avatar.*inconsistency.*switches.*between.*image"
+      ],
+      "context_keywords": [
+        "avatar",
+        "initials",
+        "flash",
+        "radix",
+        "ui",
+        "fallback",
+        "loading"
+      ],
+      "module_hints": [
+        "ChatSidebar",
+        "Avatar",
+        "AvatarFallback"
+      ],
+      "solutions": [
+        {
+          "description": "Add delayMs prop to AvatarFallback component to prevent flash during image loading",
+          "code_changes": [
+            {
+              "file_path": "src/components/ChatSidebar/ChatSidebar.tsx",
+              "description": "Add delayMs={600} to all AvatarFallback components",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/avatar_consistency_simple.spec.ts"
+          ],
+          "session_ids": [
+            "UI-C518"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-25T17:45:08.122982"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-25T17:45:08.122967",
+      "last_seen": "2025-07-25T17:45:08.122980",
+      "related_patterns": []
+    },
+    "ui_616270": {
+      "pattern_id": "ui_616270",
+      "error_type": "UI",
+      "error_patterns": [
+        "Avatar\\ shows\\ initials\\ briefly\\ before\\ loading\\ image\\ for\\ new\\ chat\\ messages",
+        "Avatar.*shows.*initials.*briefly.*before"
+      ],
+      "context_keywords": [
+        "avatar",
+        "blink",
+        "initials",
+        "image",
+        "chat",
+        "radix"
+      ],
+      "module_hints": [
+        "ChatSidebar.tsx",
+        "Avatar",
+        "AvatarFallback"
+      ],
+      "solutions": [
+        {
+          "description": "Use layered rendering approach with initials as background and image with opacity transition",
+          "code_changes": [
+            {
+              "file_path": "src/components/ChatSidebar/ChatSidebar.tsx",
+              "description": "Replace Avatar component with layered div structure for new messages",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "tests/integration/test_avatar_fix_verification.spec.ts"
+          ],
+          "session_ids": [
+            "UI-A730"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-25T19:26:15.768565"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-25T19:26:15.768555",
+      "last_seen": "2025-07-25T19:26:15.768563",
+      "related_patterns": []
+    },
+    "ui_323f89": {
+      "pattern_id": "ui_323f89",
+      "error_type": "UI",
+      "error_patterns": [
+        "Avatar\\ blinking\\ when\\ message\\ is\\ submitted",
+        "Avatar.*blinking.*when.*message.*submitted"
+      ],
+      "context_keywords": [
+        "avatar",
+        "chat",
+        "message",
+        "blink",
+        "rerender"
+      ],
+      "module_hints": [
+        "ChatAvatar",
+        "ChatMessages",
+        "useAvatarData"
+      ],
+      "solutions": [
+        {
+          "description": "Memoize avatar data calculation and components to prevent unnecessary re-renders",
+          "code_changes": [
+            {
+              "file_path": "src/components/ChatSidebar/useAvatarData.ts",
+              "description": "Added useMemo to memoize avatar data calculation",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/components/ChatSidebar/ChatMessages.tsx",
+              "description": "Wrapped component with memo and custom comparison",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/components/ChatSidebar/ChatAvatar.tsx",
+              "description": "Wrapped component with memo and custom comparison",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [],
+          "session_ids": [
+            "AVAT318"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-26T00:14:30.780488"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-26T00:14:30.780482",
+      "last_seen": "2025-07-26T00:14:30.780486",
+      "related_patterns": []
+    },
+    "lambda_b2166f": {
+      "pattern_id": "lambda_b2166f",
+      "error_type": "Lambda",
+      "error_patterns": [
+        "Unable\\ to\\ import\\ module\\ 'email_lambda_simple':\\ No\\ module\\ named\\ 'email_lambda_simple'",
+        "Unable.*import.*module.*email_lambda_simple.*module"
+      ],
+      "context_keywords": [
+        "AWS Lambda",
+        "import error",
+        "module not found",
+        "deployment"
+      ],
+      "module_hints": [
+        "lambda",
+        "email",
+        "deployment"
+      ],
+      "solutions": [
+        {
+          "description": "Lambda handler was configured to use email_lambda_simple.lambda_handler but the deployment was using a different file. Fixed by updating the correct file (email_lambda_simple.py) and redeploying.",
+          "code_changes": [
+            {
+              "file_path": "backend/lambda/email_lambda_simple.py",
+              "description": "Updated to include magic link and candidate_id handling",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "test_fixed_lambda.py"
+          ],
+          "session_ids": [
+            "LAMBDA-IMPORT-ERROR-FIX"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-26T00:18:29.791836"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-26T00:18:29.791820",
+      "last_seen": "2025-07-26T00:18:29.791834",
+      "related_patterns": []
+    },
+    "authredirect_217084": {
+      "pattern_id": "authredirect_217084",
+      "error_type": "AuthRedirect",
+      "error_patterns": [
+        "User\\ redirected\\ to\\ onboarding\\ instead\\ of\\ profile\\ after\\ clicking\\ email\\ link",
+        "User.*redirected.*onboarding.*instead.*profile"
+      ],
+      "context_keywords": [
+        "redirect",
+        "onboarding",
+        "email",
+        "magic link",
+        "profile",
+        "from_recruiter_email",
+        "auth",
+        "callback"
+      ],
+      "module_hints": [
+        "AuthCallback.tsx",
+        "MagicLinkHandler.tsx",
+        "auth"
+      ],
+      "solutions": [
+        {
+          "description": "Parse from_recruiter_email and redirect_to from both query params AND hash fragment in AuthCallback",
+          "code_changes": [
+            {
+              "file_path": "src/pages/auth/AuthCallback.tsx",
+              "description": "Check hash params for from_recruiter_email and redirect_to parameters",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/pages/auth/AuthCallback.tsx",
+              "description": "Decode redirect_to from hash and check for from_recruiter_email inside it",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/pages/auth/AuthCallback.tsx",
+              "description": "Update shouldSkipOnboarding logic to include fromRecruiterEmail flag",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "src/pages/auth/AuthCallback.tsx",
+              "description": "Use redirectToFromHashRef.current in targetRedirectUrl priority",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "debug_artifacts/test_email_redirect_simple.py",
+            "debug_artifacts/verify_auth_callback_fix.py"
+          ],
+          "session_ids": [
+            "AUTH647"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-26T11:50:37.437160"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-26T11:50:37.437146",
+      "last_seen": "2025-07-26T11:50:37.437157",
+      "related_patterns": []
+    },
+    "mcp_2ceef0": {
+      "pattern_id": "mcp_2ceef0",
+      "error_type": "MCP",
+      "error_patterns": [
+        "npx@playwright[\\\\/][^\\s\\\\/]+[\\\\/] failed",
+        "playwright.*latest.*failed"
+      ],
+      "context_keywords": [
+        "mcp",
+        "playwright",
+        "npx",
+        "failed",
+        "command"
+      ],
+      "module_hints": [
+        "mcp",
+        "playwright"
+      ],
+      "solutions": [
+        {
+          "description": "Install @playwright/mcp globally instead of using npx due to npm version incompatibility",
+          "code_changes": [
+            {
+              "file_path": "command_line",
+              "description": "Run: npm install -g @playwright/mcp@latest",
+              "diff_snippet": null,
+              "line_numbers": null
+            },
+            {
+              "file_path": "usage",
+              "description": "Use mcp-server-playwright command instead of npx",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "verify_mcp_fix.py"
+          ],
+          "session_ids": [
+            "MCP-304"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-27T03:03:17.545827"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-27T03:03:17.545815",
+      "last_seen": "2025-07-27T03:03:17.545825",
+      "related_patterns": []
+    },
+    "mcp_ef35be": {
+      "pattern_id": "mcp_ef35be",
+      "error_type": "MCP",
+      "error_patterns": [
+        "cb[\\\\/][^\\s\\\\/]+[\\\\/] is\\ not\\ a\\ function\\ npm\\ ERR",
+        "apply.*function"
+      ],
+      "context_keywords": [
+        "npx",
+        "playwright",
+        "mcp",
+        "failed",
+        "command",
+        "claude"
+      ],
+      "module_hints": [
+        "claude.json",
+        "mcp-server",
+        "npx@playwright/mcp@latest"
+      ],
+      "solutions": [
+        {
+          "description": "Replace npx command with global mcp-server-playwright command in Claude config",
+          "code_changes": [
+            {
+              "file_path": "~/.claude.json",
+              "description": "Change \"command\": \"npx@playwright/mcp@latest\" to \"command\": \"mcp-server-playwright\"",
+              "diff_snippet": null,
+              "line_numbers": null
+            }
+          ],
+          "test_cases": [
+            "debug_artifacts/test_mcp_server_reproduction.py"
+          ],
+          "session_ids": [
+            "MCP-570"
+          ],
+          "success_count": 0,
+          "failure_count": 0,
+          "last_used": "2025-07-27T03:13:13.034760"
+        }
+      ],
+      "occurrences": 1,
+      "first_seen": "2025-07-27T03:13:13.034754",
+      "last_seen": "2025-07-27T03:13:13.034758",
+      "related_patterns": []
+    }
+  },
+  "session_solutions": {
+    "JOB-137": [
+      "lookup_field_type_mismatch_d3f8a2",
+      "api_386653"
+    ],
+    "UI-234": [
+      "null_reference_map_b7c9e3"
+    ],
+    "UI-567": [
+      "null_reference_map_b7c9e3"
+    ],
+    "UI-890": [
+      "null_reference_map_b7c9e3"
+    ],
+    "DB-123": [
+      "database_relation_not_exist_e4f5a6"
+    ],
+    "DB-456": [
+      "database_relation_not_exist_e4f5a6"
+    ],
+    "AUTH-789": [
+      "auth_token_expired_a1b2c3"
+    ],
+    "import_error_patterns": [
+      "database_5724e4",
+      "api_b82ecf",
+      "null_reference_ef4b19",
+      "lookup_table_4bc33a",
+      "timeout_14ea56",
+      "file_system_36a866",
+      "lambda_5510fb",
+      "react_39eae3",
+      "swifit_business_logic_310ef8",
+      "authentication_4b75d2",
+      "build/compilation_533d42",
+      "performance_650c7f"
+    ],
+    "JOB-728": [
+      "api_386653"
+    ],
+    "JOB-773": [
+      "unknown_bfd8b5"
+    ],
+    "DEMO-001": [
+      "database_d3aae6"
+    ],
+    "DEBUG-claude-settings": [
+      "configuration_6db4d8"
+    ],
+    "c0e933dc-d401-47f2-9094-10b01f7b99cc": [
+      "ui_f28a14"
+    ],
+    "BULK194": [
+      "ui_3a2963"
+    ],
+    "LOGI265": [
+      "routing_ca3a32"
+    ],
+    "BULK796": [
+      "api_6cd74f"
+    ],
+    "HUNT664": [
+      "ui_c1bf16"
+    ],
+    "CIRC340": [
+      "javascript_778f59"
+    ],
+    "UI-F854": [
+      "ui_dc8a4a"
+    ],
+    "SEAR497": [
+      "data_b434bd"
+    ],
+    "FILT414": [
+      "ui_d21395"
+    ],
+    "YOE-FILTER-FIX": [
+      "ui_filter_28a900"
+    ],
+    "LOGO-DEBUG": [
+      "storage_aac27b"
+    ],
+    "EMAI429": [
+      "smtp_79a7ca"
+    ],
+    "AI_MSG_FIX_2025": [
+      "api_7ca62a"
+    ],
+    "CORS_FIX_2025": [
+      "cors_60c06f"
+    ],
+    "AI_MSG_COMPLETE_2025": [
+      "api_7ca62a"
+    ],
+    "UI-C518": [
+      "ui_f368e6"
+    ],
+    "UI-A730": [
+      "ui_616270"
+    ],
+    "AVAT318": [
+      "ui_323f89"
+    ],
+    "LAMBDA-IMPORT-ERROR-FIX": [
+      "lambda_b2166f"
+    ],
+    "AUTH647": [
+      "authredirect_217084"
+    ],
+    "MCP-304": [
+      "mcp_2ceef0"
+    ],
+    "MCP-570": [
+      "mcp_ef35be"
+    ]
+  },
+  "metadata": {
+    "last_updated": "2025-07-27T03:13:13.034763",
+    "total_patterns": 42,
+    "total_solutions": 42
+  }
+}

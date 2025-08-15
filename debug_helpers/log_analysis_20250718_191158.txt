@@ -1,0 +1,42 @@
+================================================================================
+🔍 AUTOMATED LOG ANALYSIS REPORT
+================================================================================
+Generated: 2025-07-18 19:11:58
+
+📊 SUMMARY
+----------------------------------------
+Files analyzed: 4
+Total errors found: 2
+
+🔴 ERROR BREAKDOWN
+----------------------------------------
+🔴 Database: 2 occurrences
+
+🚨 CRITICAL FINDINGS
+----------------------------------------
+1. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+2. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+💡 SUGGESTED ACTIONS
+----------------------------------------
+1. Check if migrations have been run: cd schema && ./run_migration.sh
+2. Verify database schema matches expectations in schema/sql/structured/
+3. Check if user has proper permissions
+4. Check RLS policies are correctly configured
+5. Verify database connection in .env file
+
+📅 ERROR TIMELINE (last 5)
+----------------------------------------
+None - [Database] Line 68
+None - [Database] Line 74
+
+🎯 RECOMMENDED NEXT STEPS
+----------------------------------------
+1. Focus on Database errors first (most frequent)
+2. Address critical findings immediately
+3. Run tests after implementing fixes
+4. Re-run log analysis to verify fixes
+================================================================================

@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "post-execution": [],
+    "pre-commit": [],
+    "post-commit": [],
+    "pre-push": []
+  },
+  "settings": {
+    "hooks_enabled": true,
+    "verbose": true,
+    "log_file": ".claude/hooks/hooks.log"
+  }
+}

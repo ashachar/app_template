@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Debug Timeline</title>
+    
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-tertiary: #3a3a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-color: #444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --error-color: #dc3545;
+            --info-color: #17a2b8;
+            --critical-color: #721c24;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        #timeline-app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header Styles */
+        .timeline-header {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .timeline-header h1 {
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .summary-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .error-count { color: var(--error-color); }
+        .warning-count { color: var(--warning-color); }
+        .success-count { color: var(--success-color); }
+        
+        /* Controls */
+        .timeline-controls {
+            background: var(--bg-secondary);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .filter-select, .filter-input {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .filter-input {
+            width: 200px;
+        }
+        
+        .navigation-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--border-color);
+        }
+        
+        .btn-icon {
+            padding: 6px 8px;
+            font-size: 16px;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        
+        /* Timeline Container */
+        .timeline-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-primary);
+        }
+        
+        .timeline-swimlanes {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 200px;
+            height: 100%;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            z-index: 10;
+        }
+        
+        .swimlane {
+            height: 80px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .swimlane-header {
+            padding: 10px 15px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .module-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .event-count {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .timeline-events {
+            position: absolute;
+            left: 200px;
+            top: 0;
+            right: 0;
+            height: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        
+        /* Timeline Events */
+        .timeline-event {
+            position: absolute;
+            width: 4%;
+            height: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transform: translateY(-50%);
+        }
+        
+        .timeline-event:hover {
+            z-index: 100;
+            transform: translateY(-50%) scale(1.2);
+        }
+        
+        .timeline-event.has-duration {
+            border-radius: 10px;
+        }
+        
+        /* Event Severity Colors */
+        .severity-info { background: var(--info-color); }
+        .severity-success { background: var(--success-color); }
+        .severity-warning { background: var(--warning-color); }
+        .severity-error { background: var(--error-color); }
+        .severity-critical { background: var(--critical-color); }
+        
+        .event-icon {
+            font-size: 14px;
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+        }
+        
+        /* Tooltip */
+        .event-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-5px);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px;
+            min-width: 250px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .timeline-event:hover .event-tooltip {
+            display: block;
+        }
+        
+        .tooltip-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .tooltip-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+        
+        .tooltip-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        /* Details Panel */
+        .event-details-panel {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            transition: right 0.3s;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .event-details-panel.open {
+            right: 0;
+        }
+        
+        .details-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .details-header h3 {
+            margin: 0;
+        }
+        
+        .btn-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .details-content {
+            padding: 20px;
+        }
+        
+        .details-placeholder {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 50px;
+        }
+        
+        /* Event Details Styles */
+        .event-detail-section {
+            margin-bottom: 20px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            margin-bottom: 15px;
+        }
+        
+        .code-block {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .tags {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* Footer */
+        .timeline-footer {
+            background: var(--bg-secondary);
+            padding: 10px 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .footer-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .timeline-swimlanes {
+                width: 120px;
+            }
+            
+            .timeline-events {
+                left: 120px;
+            }
+            
+            .event-details-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+        }
+        
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Zoom levels */
+        .timeline-events.zoom-2x {
+            transform: scaleX(2);
+            transform-origin: left;
+        }
+        
+        .timeline-events.zoom-4x {
+            transform: scaleX(4);
+            transform-origin: left;
+        }
+        
+        .timeline-events.zoom-8x {
+            transform: scaleX(8);
+            transform-origin: left;
+        }
+    </style>
+        
+</head>
+<body>
+    <div id="timeline-app">
+        <header class="timeline-header">
+            <h1>Authentication Debug Timeline</h1>
+            
+        <div class="summary-stats">
+            <div class="stat-item">
+                <span class="stat-label">Session ID:</span>
+                <span class="stat-value">DEMO-TIMELINE</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Duration:</span>
+                <span class="stat-value">51.4s</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Events:</span>
+                <span class="stat-value">11</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Errors:</span>
+                <span class="stat-value error-count">5</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Warnings:</span>
+                <span class="stat-value warning-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Success:</span>
+                <span class="stat-value success-count">4</span>
+            </div>
+        </div>
+        
+        </header>
+        
+        <div class="timeline-controls">
+            
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label>Module:</label>
+                <select id="module-filter" class="filter-select">
+                    <option value="">All Modules</option>
+                    <option value="api">api</option>
+<option value="auth">auth</option>
+<option value="main">main</option>
+<option value="pattern_db">pattern_db</option>
+<option value="test">test</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Event Type:</label>
+                <select id="type-filter" class="filter-select">
+                    <option value="">All Types</option>
+                    <option value="api_call">api_call (2)</option>
+<option value="error">error (1)</option>
+<option value="finding">finding (1)</option>
+<option value="pattern_match">pattern_match (1)</option>
+<option value="session_end">session_end (1)</option>
+<option value="session_start">session_start (2)</option>
+<option value="solution_attempt">solution_attempt (1)</option>
+<option value="test_run">test_run (2)</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Severity:</label>
+                <select id="severity-filter" class="filter-select">
+                    <option value="">All Severities</option>
+                    <option value="error">Error (5)</option>
+<option value="success">Success (4)</option>
+<option value="info">Info (2)</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Search:</label>
+                <input type="text" id="search-filter" class="filter-input" 
+                       placeholder="Search events...">
+            </div>
+            
+            <button id="clear-filters" class="btn btn-secondary">Clear Filters</button>
+        </div>
+        
+            
+        <div class="navigation-controls">
+            <button id="zoom-in" class="btn btn-icon" title="Zoom In">+</button>
+            <button id="zoom-out" class="btn btn-icon" title="Zoom Out">-</button>
+            <button id="zoom-fit" class="btn btn-icon" title="Fit to View"></button>
+            <button id="toggle-details" class="btn btn-icon" title="Toggle Details"></button>
+            <button id="export-timeline" class="btn btn-icon" title="Export"></button>
+            <button id="share-timeline" class="btn btn-icon" title="Share"></button>
+        </div>
+        
+        </div>
+        
+        <div class="timeline-container">
+            <div class="timeline-swimlanes">
+                
+            <div class="swimlane" data-module="api">
+                <div class="swimlane-header">
+                    <span class="module-name">api</span>
+                    <span class="event-count">2 events</span>
+                </div>
+            </div>
+            
+
+            <div class="swimlane" data-module="auth">
+                <div class="swimlane-header">
+                    <span class="module-name">auth</span>
+                    <span class="event-count">3 events</span>
+                </div>
+            </div>
+            
+
+            <div class="swimlane" data-module="main">
+                <div class="swimlane-header">
+                    <span class="module-name">main</span>
+                    <span class="event-count">3 events</span>
+                </div>
+            </div>
+            
+
+            <div class="swimlane" data-module="pattern_db">
+                <div class="swimlane-header">
+                    <span class="module-name">pattern_db</span>
+                    <span class="event-count">1 events</span>
+                </div>
+            </div>
+            
+
+            <div class="swimlane" data-module="test">
+                <div class="swimlane-header">
+                    <span class="module-name">test</span>
+                    <span class="event-count">2 events</span>
+                </div>
+            </div>
+            
+            </div>
+            <div class="timeline-events" id="timeline-events">
+                
+            <div class="timeline-event event-type-session_start severity-info" 
+                 id="event-session_start_e4b20fef"
+                 data-event-id="session_start_e4b20fef"
+                 data-module="main"
+                 data-type="session_start"
+                 data-severity="info"
+                 style="left: 0.0%; top: 210px; width: 4%;"
+                 title="Debug Session Started">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">Debug Session Started</div>
+                    <div class="tooltip-time">14:01:41.416</div>
+                    <div class="tooltip-description">Starting investigation of API authentication issue...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-api_call severity-error has-duration" 
+                 id="event-api_call_28ff96dd"
+                 data-event-id="api_call_28ff96dd"
+                 data-module="api"
+                 data-type="api_call"
+                 data-severity="error"
+                 style="left: 0.19764855740671272%; top: 50px; width: 0.39849324605754%;"
+                 title="POST /api/jobs">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">POST /api/jobs</div>
+                    <div class="tooltip-time">14:01:41.518</div>
+                    <div class="tooltip-description">Creating new job listing...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-session_start severity-info" 
+                 id="event-session_start_2b4dc895"
+                 data-event-id="session_start_2b4dc895"
+                 data-module="main"
+                 data-type="session_start"
+                 data-severity="info"
+                 style="left: 98.17062094166708%; top: 210px; width: 4%;"
+                 title="Debug Session Started">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">Debug Session Started</div>
+                    <div class="tooltip-time">14:02:31.919</div>
+                    <div class="tooltip-description">Starting investigation of API authentication issue...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-api_call severity-error has-duration" 
+                 id="event-api_call_a2bbd77e"
+                 data-event-id="api_call_a2bbd77e"
+                 data-module="api"
+                 data-type="api_call"
+                 data-severity="error"
+                 style="left: 98.36509668886528%; top: 50px; width: 0.39849324605754%;"
+                 title="POST /api/jobs">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">POST /api/jobs</div>
+                    <div class="tooltip-time">14:02:32.019</div>
+                    <div class="tooltip-description">Creating new job listing...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-error severity-error" 
+                 id="event-error_af39217e"
+                 data-event-id="error_af39217e"
+                 data-module="auth"
+                 data-type="error"
+                 data-severity="error"
+                 style="left: 98.76576153488452%; top: 130px; width: 4%;"
+                 title="Error in auth">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">Error in auth</div>
+                    <div class="tooltip-time">14:02:32.225</div>
+                    <div class="tooltip-description">Authentication failed: Invalid token...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-finding severity-error" 
+                 id="event-finding_0f3f1d70"
+                 data-event-id="finding_0f3f1d70"
+                 data-module="auth"
+                 data-type="finding"
+                 data-severity="error"
+                 style="left: 98.96023218408209%; top: 130px; width: 4%;"
+                 title="Root_Cause Found">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">Root_Cause Found</div>
+                    <div class="tooltip-time">14:02:32.325</div>
+                    <div class="tooltip-description">Token expiration not handled properly...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-test_run severity-error has-duration" 
+                 id="event-test_run_abb9b2ec"
+                 data-event-id="test_run_abb9b2ec"
+                 data-module="test"
+                 data-type="test_run"
+                 data-severity="error"
+                 style="left: 99.17411416584957%; top: 370px; width: 2.9605132377835774%;"
+                 title="Test test_token_refresh">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">Test test_token_refresh</div>
+                    <div class="tooltip-time">14:02:32.435</div>
+                    <div class="tooltip-description">Test failed: RefreshToken is not defined...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-test_run severity-success has-duration" 
+                 id="event-test_run_3fb55536"
+                 data-event-id="test_run_3fb55536"
+                 data-module="test"
+                 data-type="test_run"
+                 data-severity="success"
+                 style="left: 99.58246123535937%; top: 370px; width: 1.73393158772354%;"
+                 title="Test test_token_refresh">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">Test test_token_refresh</div>
+                    <div class="tooltip-time">14:02:32.645</div>
+                    <div class="tooltip-description">Test passed...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-solution_attempt severity-success" 
+                 id="event-solution_attempt_2663a439"
+                 data-event-id="solution_attempt_2663a439"
+                 data-module="auth"
+                 data-type="solution_attempt"
+                 data-severity="success"
+                 style="left: 99.79597338035407%; top: 130px; width: 4%;"
+                 title="Fix Applied">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">Fix Applied</div>
+                    <div class="tooltip-time">14:02:32.755</div>
+                    <div class="tooltip-description">Added token refresh logic to auth middleware...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-pattern_match severity-success" 
+                 id="event-pattern_match_507eb3f7"
+                 data-event-id="pattern_match_507eb3f7"
+                 data-module="pattern_db"
+                 data-type="pattern_match"
+                 data-severity="success"
+                 style="left: 99.79604753309047%; top: 290px; width: 4%;"
+                 title="Known Issue Identified">
+                <span class="event-icon"></span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">Known Issue Identified</div>
+                    <div class="tooltip-time">14:02:32.755</div>
+                    <div class="tooltip-description">Matched pattern: auth_token_expired (85% confidence)...</div>
+                </div>
+            </div>
+            
+
+            <div class="timeline-event event-type-session_end severity-success" 
+                 id="event-session_end_6dd5b17e"
+                 data-event-id="session_end_6dd5b17e"
+                 data-module="main"
+                 data-type="session_end"
+                 data-severity="success"
+                 style="left: 100.0%; top: 210px; width: 4%;"
+                 title="Debug Session Completed">
+                <span class="event-icon">⏹</span>
+                <div class="event-tooltip">
+                    <div class="tooltip-header">Debug Session Completed</div>
+                    <div class="tooltip-time">14:02:32.860</div>
+                    <div class="tooltip-description">Issue resolved: Authentication now handles token refresh...</div>
+                </div>
+            </div>
+            
+            </div>
+        </div>
+        
+        <div class="event-details-panel" id="event-details-panel">
+            
+        <div class="details-header">
+            <h3>Event Details</h3>
+            <button id="close-details" class="btn-close">×</button>
+        </div>
+        <div class="details-content" id="details-content">
+            <p class="details-placeholder">Click on an event to view details</p>
+        </div>
+        
+        </div>
+        
+        <footer class="timeline-footer">
+            
+        <div class="footer-info">
+            <span>Generated: 2025-07-19 14:02:32</span>
+            <span>Issue: Authentication Token Expiry</span>
+            <span>Timeline v1.0</span>
+        </div>
+        
+        </footer>
+    </div>
+    
+    <script>
+        const timelineData = {
+  "start_time": 1752922901.416896,
+  "end_time": 1752922952.860679,
+  "duration": 51.443782806396484,
+  "positions": {
+    "session_start_e4b20fef": {
+      "x_percent": 0.0,
+      "timestamp": 1752922901.416896,
+      "duration_ms": null
+    },
+    "api_call_28ff96dd": {
+      "x_percent": 0.19764855740671272,
+      "timestamp": 1752922901.518574,
+      "duration_ms": 205
+    },
+    "session_start_2b4dc895": {
+      "x_percent": 98.17062094166708,
+      "timestamp": 1752922951.9195771,
+      "duration_ms": null
+    },
+    "api_call_a2bbd77e": {
+      "x_percent": 98.36509668886528,
+      "timestamp": 1752922952.0196228,
+      "duration_ms": 205
+    },
+    "error_af39217e": {
+      "x_percent": 98.76576153488452,
+      "timestamp": 1752922952.22574,
+      "duration_ms": null
+    },
+    "finding_0f3f1d70": {
+      "x_percent": 98.96023218408209,
+      "timestamp": 1752922952.325783,
+      "duration_ms": null
+    },
+    "test_run_abb9b2ec": {
+      "x_percent": 99.17411416584957,
+      "timestamp": 1752922952.435812,
+      "duration_ms": 1523
+    },
+    "test_run_3fb55536": {
+      "x_percent": 99.58246123535937,
+      "timestamp": 1752922952.6458812,
+      "duration_ms": 892
+    },
+    "solution_attempt_2663a439": {
+      "x_percent": 99.79597338035407,
+      "timestamp": 1752922952.75572,
+      "duration_ms": null
+    },
+    "pattern_match_507eb3f7": {
+      "x_percent": 99.79604753309047,
+      "timestamp": 1752922952.755758,
+      "duration_ms": null
+    },
+    "session_end_6dd5b17e": {
+      "x_percent": 100.0,
+      "timestamp": 1752922952.860679,
+      "duration_ms": null
+    }
+  },
+  "modules": [
+    {
+      "module": "api",
+      "lane_index": 0,
+      "event_count": 2,
+      "events": [
+        "api_call_28ff96dd",
+        "api_call_a2bbd77e"
+      ]
+    },
+    {
+      "module": "auth",
+      "lane_index": 1,
+      "event_count": 3,
+      "events": [
+        "error_af39217e",
+        "finding_0f3f1d70",
+        "solution_attempt_2663a439"
+      ]
+    },
+    {
+      "module": "main",
+      "lane_index": 2,
+      "event_count": 3,
+      "events": [
+        "session_start_e4b20fef",
+        "session_start_2b4dc895",
+        "session_end_6dd5b17e"
+      ]
+    },
+    {
+      "module": "pattern_db",
+      "lane_index": 3,
+      "event_count": 1,
+      "events": [
+        "pattern_match_507eb3f7"
+      ]
+    },
+    {
+      "module": "test",
+      "lane_index": 4,
+      "event_count": 2,
+      "events": [
+        "test_run_abb9b2ec",
+        "test_run_3fb55536"
+      ]
+    }
+  ],
+  "total_events": 11,
+  "event_types": {
+    "session_start": 2,
+    "api_call": 2,
+    "error": 1,
+    "finding": 1,
+    "test_run": 2,
+    "solution_attempt": 1,
+    "pattern_match": 1,
+    "session_end": 1
+  },
+  "severities": {
+    "info": 2,
+    "error": 5,
+    "success": 4
+  }
+};
+        const eventsData = [
+  {
+    "event_id": "session_start_e4b20fef",
+    "timestamp": 1752922901.416896,
+    "event_type": "session_start",
+    "severity": "info",
+    "module": "main",
+    "title": "Debug Session Started",
+    "description": "Starting investigation of API authentication issue",
+    "details": {},
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\u25b6\ufe0f",
+    "color": "#6c757d",
+    "tags": [],
+    "duration_ms": null,
+    "end_timestamp": null,
+    "formatted_time": "2025-07-19T14:01:41.416896"
+  },
+  {
+    "event_id": "api_call_28ff96dd",
+    "timestamp": 1752922901.518574,
+    "event_type": "api_call",
+    "severity": "error",
+    "module": "api",
+    "title": "POST /api/jobs",
+    "description": "Creating new job listing",
+    "details": {
+      "error": "401 Unauthorized"
+    },
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\ud83c\udf10",
+    "color": "#6c757d",
+    "tags": [],
+    "duration_ms": 205,
+    "end_timestamp": 1752922901.723728,
+    "formatted_time": "2025-07-19T14:01:41.518574"
+  },
+  {
+    "event_id": "session_start_2b4dc895",
+    "timestamp": 1752922951.9195771,
+    "event_type": "session_start",
+    "severity": "info",
+    "module": "main",
+    "title": "Debug Session Started",
+    "description": "Starting investigation of API authentication issue",
+    "details": {},
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\u25b6\ufe0f",
+    "color": "#6c757d",
+    "tags": [],
+    "duration_ms": null,
+    "end_timestamp": null,
+    "formatted_time": "2025-07-19T14:02:31.919577"
+  },
+  {
+    "event_id": "api_call_a2bbd77e",
+    "timestamp": 1752922952.0196228,
+    "event_type": "api_call",
+    "severity": "error",
+    "module": "api",
+    "title": "POST /api/jobs",
+    "description": "Creating new job listing",
+    "details": {
+      "error": "401 Unauthorized"
+    },
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\ud83c\udf10",
+    "color": "#6c757d",
+    "tags": [],
+    "duration_ms": 205,
+    "end_timestamp": 1752922952.2251992,
+    "formatted_time": "2025-07-19T14:02:32.019623"
+  },
+  {
+    "event_id": "error_af39217e",
+    "timestamp": 1752922952.22574,
+    "event_type": "error",
+    "severity": "error",
+    "module": "auth",
+    "title": "Error in auth",
+    "description": "Authentication failed: Invalid token",
+    "details": {},
+    "stack_trace": "at checkAuth (auth.js:45)\\nat middleware (server.js:123)",
+    "file_path": "src/middleware/auth.js",
+    "line_number": 45,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\u274c",
+    "color": "#dc3545",
+    "tags": [
+      "error",
+      "auth"
+    ],
+    "duration_ms": null,
+    "end_timestamp": null,
+    "formatted_time": "2025-07-19T14:02:32.225740"
+  },
+  {
+    "event_id": "finding_0f3f1d70",
+    "timestamp": 1752922952.325783,
+    "event_type": "finding",
+    "severity": "error",
+    "module": "auth",
+    "title": "Root_Cause Found",
+    "description": "Token expiration not handled properly",
+    "details": {
+      "finding_type": "root_cause",
+      "evidence": "Token expired 2 hours ago but no refresh attempted",
+      "fix_suggestion": "Implement token refresh logic"
+    },
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\ud83d\udd0d",
+    "color": "#dc3545",
+    "tags": [
+      "finding",
+      "root_cause"
+    ],
+    "duration_ms": null,
+    "end_timestamp": null,
+    "formatted_time": "2025-07-19T14:02:32.325783"
+  },
+  {
+    "event_id": "test_run_abb9b2ec",
+    "timestamp": 1752922952.435812,
+    "event_type": "test_run",
+    "severity": "error",
+    "module": "test",
+    "title": "Test test_token_refresh",
+    "description": "Test failed: RefreshToken is not defined",
+    "details": {
+      "test_name": "test_token_refresh",
+      "passed": false,
+      "error": "RefreshToken is not defined"
+    },
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\ud83e\uddea",
+    "color": "#dc3545",
+    "tags": [
+      "test",
+      "failed"
+    ],
+    "duration_ms": 1523,
+    "end_timestamp": null,
+    "formatted_time": "2025-07-19T14:02:32.435812"
+  },
+  {
+    "event_id": "test_run_3fb55536",
+    "timestamp": 1752922952.6458812,
+    "event_type": "test_run",
+    "severity": "success",
+    "module": "test",
+    "title": "Test test_token_refresh",
+    "description": "Test passed",
+    "details": {
+      "test_name": "test_token_refresh",
+      "passed": true
+    },
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\ud83e\uddea",
+    "color": "#28a745",
+    "tags": [
+      "test",
+      "passed"
+    ],
+    "duration_ms": 892,
+    "end_timestamp": null,
+    "formatted_time": "2025-07-19T14:02:32.645881"
+  },
+  {
+    "event_id": "solution_attempt_2663a439",
+    "timestamp": 1752922952.75572,
+    "event_type": "solution_attempt",
+    "severity": "success",
+    "module": "auth",
+    "title": "Fix Applied",
+    "description": "Added token refresh logic to auth middleware",
+    "details": {},
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\ud83d\udca1",
+    "color": "#28a745",
+    "tags": [],
+    "duration_ms": null,
+    "end_timestamp": null,
+    "formatted_time": "2025-07-19T14:02:32.755720"
+  },
+  {
+    "event_id": "pattern_match_507eb3f7",
+    "timestamp": 1752922952.755758,
+    "event_type": "pattern_match",
+    "severity": "success",
+    "module": "pattern_db",
+    "title": "Known Issue Identified",
+    "description": "Matched pattern: auth_token_expired (85% confidence)",
+    "details": {
+      "pattern_id": "auth_token_expired_a1b2c3",
+      "confidence": 0.85,
+      "previous_occurrences": 15
+    },
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\ud83c\udfaf",
+    "color": "#28a745",
+    "tags": [],
+    "duration_ms": null,
+    "end_timestamp": null,
+    "formatted_time": "2025-07-19T14:02:32.755758"
+  },
+  {
+    "event_id": "session_end_6dd5b17e",
+    "timestamp": 1752922952.860679,
+    "event_type": "session_end",
+    "severity": "success",
+    "module": "main",
+    "title": "Debug Session Completed",
+    "description": "Issue resolved: Authentication now handles token refresh",
+    "details": {},
+    "stack_trace": null,
+    "file_path": null,
+    "line_number": null,
+    "parent_event_id": null,
+    "related_event_ids": [],
+    "icon": "\u23f9\ufe0f",
+    "color": "#28a745",
+    "tags": [],
+    "duration_ms": null,
+    "end_timestamp": null,
+    "formatted_time": "2025-07-19T14:02:32.860679"
+  }
+];
+    </script>
+    
+    <script>
+        // Timeline Interactive JavaScript
+        (function() {
+            'use strict';
+            
+            // State
+            let currentZoom = 1;
+            let selectedEvent = null;
+            let filteredEvents = new Set();
+            
+            // Elements
+            const timelineEvents = document.getElementById('timeline-events');
+            const detailsPanel = document.getElementById('event-details-panel');
+            const detailsContent = document.getElementById('details-content');
+            
+            // Initialize
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeEventHandlers();
+                initializeFilters();
+                initializeControls();
+            });
+            
+            // Event Handlers
+            function initializeEventHandlers() {
+                // Event click handler
+                document.querySelectorAll('.timeline-event').forEach(event => {
+                    event.addEventListener('click', function() {
+                        selectEvent(this.dataset.eventId);
+                    });
+                });
+                
+                // Close details
+                document.getElementById('close-details').addEventListener('click', function() {
+                    closeDetails();
+                });
+                
+                // Toggle details panel
+                document.getElementById('toggle-details').addEventListener('click', function() {
+                    toggleDetails();
+                });
+            }
+            
+            // Filters
+            function initializeFilters() {
+                const moduleFilter = document.getElementById('module-filter');
+                const typeFilter = document.getElementById('type-filter');
+                const severityFilter = document.getElementById('severity-filter');
+                const searchFilter = document.getElementById('search-filter');
+                const clearFilters = document.getElementById('clear-filters');
+                
+                [moduleFilter, typeFilter, severityFilter].forEach(filter => {
+                    filter.addEventListener('change', applyFilters);
+                });
+                
+                searchFilter.addEventListener('input', applyFilters);
+                
+                clearFilters.addEventListener('click', function() {
+                    moduleFilter.value = '';
+                    typeFilter.value = '';
+                    severityFilter.value = '';
+                    searchFilter.value = '';
+                    applyFilters();
+                });
+            }
+            
+            function applyFilters() {
+                const module = document.getElementById('module-filter').value;
+                const type = document.getElementById('type-filter').value;
+                const severity = document.getElementById('severity-filter').value;
+                const search = document.getElementById('search-filter').value.toLowerCase();
+                
+                filteredEvents.clear();
+                
+                document.querySelectorAll('.timeline-event').forEach(event => {
+                    let show = true;
+                    
+                    if (module && event.dataset.module !== module) show = false;
+                    if (type && event.dataset.type !== type) show = false;
+                    if (severity && event.dataset.severity !== severity) show = false;
+                    
+                    if (search && show) {
+                        const eventData = eventsData.find(e => e.event_id === event.dataset.eventId);
+                        if (eventData) {
+                            const searchText = (eventData.title + ' ' + eventData.description).toLowerCase();
+                            if (!searchText.includes(search)) show = false;
+                        }
+                    }
+                    
+                    event.classList.toggle('hidden', !show);
+                    if (!show) filteredEvents.add(event.dataset.eventId);
+                });
+            }
+            
+            // Controls
+            function initializeControls() {
+                // Zoom controls
+                document.getElementById('zoom-in').addEventListener('click', function() {
+                    zoomIn();
+                });
+                
+                document.getElementById('zoom-out').addEventListener('click', function() {
+                    zoomOut();
+                });
+                
+                document.getElementById('zoom-fit').addEventListener('click', function() {
+                    zoomFit();
+                });
+                
+                // Export/Share
+                document.getElementById('export-timeline').addEventListener('click', function() {
+                    exportTimeline();
+                });
+                
+                document.getElementById('share-timeline').addEventListener('click', function() {
+                    shareTimeline();
+                });
+            }
+            
+            // Zoom functions
+            function zoomIn() {
+                if (currentZoom < 8) {
+                    currentZoom *= 2;
+                    applyZoom();
+                }
+            }
+            
+            function zoomOut() {
+                if (currentZoom > 0.25) {
+                    currentZoom /= 2;
+                    applyZoom();
+                }
+            }
+            
+            function zoomFit() {
+                currentZoom = 1;
+                applyZoom();
+                timelineEvents.scrollLeft = 0;
+            }
+            
+            function applyZoom() {
+                timelineEvents.classList.remove('zoom-2x', 'zoom-4x', 'zoom-8x');
+                if (currentZoom === 2) timelineEvents.classList.add('zoom-2x');
+                else if (currentZoom === 4) timelineEvents.classList.add('zoom-4x');
+                else if (currentZoom === 8) timelineEvents.classList.add('zoom-8x');
+            }
+            
+            // Event selection
+            function selectEvent(eventId) {
+                selectedEvent = eventId;
+                
+                // Highlight selected event
+                document.querySelectorAll('.timeline-event').forEach(e => {
+                    e.classList.remove('selected');
+                });
+                document.getElementById('event-' + eventId).classList.add('selected');
+                
+                // Show details
+                showEventDetails(eventId);
+            }
+            
+            function showEventDetails(eventId) {
+                const eventData = eventsData.find(e => e.event_id === eventId);
+                if (!eventData) return;
+                
+                detailsContent.innerHTML = `
+                    <div class="event-detail-section">
+                        <div class="detail-label">Event Type</div>
+                        <div class="detail-value">${eventData.event_type}</div>
+                        
+                        <div class="detail-label">Title</div>
+                        <div class="detail-value">${escapeHtml(eventData.title)}</div>
+                        
+                        <div class="detail-label">Description</div>
+                        <div class="detail-value">${escapeHtml(eventData.description)}</div>
+                        
+                        <div class="detail-label">Time</div>
+                        <div class="detail-value">${formatTimestamp(eventData.timestamp)}</div>
+                        
+                        ${eventData.duration_ms ? `
+                        <div class="detail-label">Duration</div>
+                        <div class="detail-value">${formatDuration(eventData.duration_ms)}</div>
+                        ` : ''}
+                        
+                        <div class="detail-label">Module</div>
+                        <div class="detail-value">${eventData.module}</div>
+                        
+                        <div class="detail-label">Severity</div>
+                        <div class="detail-value">
+                            <span class="tag severity-${eventData.severity}">${eventData.severity}</span>
+                        </div>
+                        
+                        ${eventData.tags && eventData.tags.length > 0 ? `
+                        <div class="detail-label">Tags</div>
+                        <div class="detail-value">
+                            <div class="tags">
+                                ${eventData.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${eventData.file_path ? `
+                        <div class="detail-label">File</div>
+                        <div class="detail-value">
+                            <code>${escapeHtml(eventData.file_path)}${eventData.line_number ? ':' + eventData.line_number : ''}</code>
+                        </div>
+                        ` : ''}
+                        
+                        ${eventData.stack_trace ? `
+                        <div class="detail-label">Stack Trace</div>
+                        <div class="detail-value">
+                            <div class="code-block">${escapeHtml(eventData.stack_trace)}</div>
+                        </div>
+                        ` : ''}
+                        
+                        ${eventData.details && Object.keys(eventData.details).length > 0 ? `
+                        <div class="detail-label">Additional Details</div>
+                        <div class="detail-value">
+                            <div class="code-block">${JSON.stringify(eventData.details, null, 2)}</div>
+                        </div>
+                        ` : ''}
+                        
+                        ${eventData.related_event_ids && eventData.related_event_ids.length > 0 ? `
+                        <div class="detail-label">Related Events</div>
+                        <div class="detail-value">
+                            ${eventData.related_event_ids.map(id => {
+                                const related = eventsData.find(e => e.event_id === id);
+                                return related ? `<a href="#" onclick="selectEvent('${id}'); return false;">${escapeHtml(related.title)}</a><br>` : '';
+                            }).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                detailsPanel.classList.add('open');
+            }
+            
+            function closeDetails() {
+                detailsPanel.classList.remove('open');
+                selectedEvent = null;
+                document.querySelectorAll('.timeline-event').forEach(e => {
+                    e.classList.remove('selected');
+                });
+            }
+            
+            function toggleDetails() {
+                detailsPanel.classList.toggle('open');
+            }
+            
+            // Export/Share functions
+            function exportTimeline() {
+                const exportData = {
+                    metadata: {
+                        title: document.querySelector('h1').textContent,
+                        exported_at: new Date().toISOString(),
+                        filters: {
+                            module: document.getElementById('module-filter').value,
+                            type: document.getElementById('type-filter').value,
+                            severity: document.getElementById('severity-filter').value,
+                            search: document.getElementById('search-filter').value
+                        }
+                    },
+                    timeline_data: timelineData,
+                    events: eventsData
+                };
+                
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `timeline_${new Date().getTime()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            
+            function shareTimeline() {
+                // Generate shareable URL (in real implementation, would upload to server)
+                const shareData = {
+                    title: document.querySelector('h1').textContent,
+                    events: eventsData.length,
+                    duration: formatDuration(timelineData.duration * 1000)
+                };
+                
+                const shareUrl = window.location.href + '#shared-' + btoa(JSON.stringify(shareData)).substr(0, 8);
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Debug Timeline',
+                        text: `Debug timeline with ${shareData.events} events over ${shareData.duration}`,
+                        url: shareUrl
+                    });
+                } else {
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        alert('Share link copied to clipboard!');
+                    });
+                }
+            }
+            
+            // Utility functions
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            function formatTimestamp(timestamp) {
+                return new Date(timestamp * 1000).toLocaleString();
+            }
+            
+            function formatDuration(ms) {
+                if (ms < 1000) return ms + 'ms';
+                if (ms < 60000) return (ms / 1000).toFixed(1) + 's';
+                if (ms < 3600000) return (ms / 60000).toFixed(1) + 'm';
+                return (ms / 3600000).toFixed(1) + 'h';
+            }
+            
+            // Make selectEvent global for related events links
+            window.selectEvent = selectEvent;
+        })();
+    </script>
+        
+</body>
+</html>

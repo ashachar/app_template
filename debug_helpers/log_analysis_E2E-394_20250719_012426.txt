@@ -1,0 +1,68 @@
+================================================================================
+🔍 AUTOMATED LOG ANALYSIS REPORT
+📌 Debug Session: E2E-394
+================================================================================
+Generated: 2025-07-19 01:24:26
+
+📊 SUMMARY
+----------------------------------------
+Files analyzed: 6
+Total errors found: 7
+
+🔴 ERROR BREAKDOWN
+----------------------------------------
+🔴 Database: 4 occurrences
+🔴 API: 3 occurrences
+
+🚨 CRITICAL FINDINGS
+----------------------------------------
+1. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+2. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+3. [API] in debug-output.log
+   [BROWSER ERROR]: TypeError: Failed to fetch
+
+4. [API] in debug-output.log
+   [BROWSER ERROR]: Failed to initialize lookup service: {message: TypeError: Failed to fetch, details: TypeError: Failed to fetch
+
+5. [API] in debug-output.log
+   [BROWSER ERROR]: [getUserJourneyState] Error getting user: AuthRetryableFetchError: Failed to fetch
+
+6. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+7. [Database] in server_output.log
+   [1]   message: 'relation "public.resume_generations" does not exist'
+
+💡 SUGGESTED ACTIONS
+----------------------------------------
+1. Check CORS configuration in api/server.js
+2. Verify API endpoint exists in api/routes/
+3. Database connection issues may be causing API failures
+4. Check if route requires authentication
+5. Check if user has proper permissions
+6. Verify API server is running: check server_output.log
+7. Verify database schema matches expectations in schema/sql/structured/
+8. Check if migrations have been run: cd schema && ./run_migration.sh
+9. Check authentication tokens in Headers
+10. Verify database connection in .env file
+11. Check RLS policies are correctly configured
+
+📅 ERROR TIMELINE (last 5)
+----------------------------------------
+None - [Database] Line 74
+None - [Database] Line 74
+None - [API] Line 119
+None - [API] Line 127
+None - [API] Line 129
+
+🎯 RECOMMENDED NEXT STEPS
+----------------------------------------
+1. Focus on Database errors first (most frequent)
+2. Address critical findings immediately
+3. Run tests after implementing fixes
+4. Re-run log analysis to verify fixes
+================================================================================
