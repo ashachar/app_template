@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase';
-import { checkPhoneVerificationRequired } from '@/api/phoneVerificationApi';
 import { getAuthCallbackUrl } from './AuthContext.utils';
 import { SignUpMetadata } from './AuthContext.types';
 
@@ -118,12 +117,8 @@ export const authService = {
   },
 
   async checkPhoneVerification(userId: string): Promise<boolean> {
-    try {
-      const result = await checkPhoneVerificationRequired(userId);
-      return result.required;
-    } catch (error) {
-      console.error('[PHONE_VERIFY_DEBUG] Error checking phone verification:', error);
-      return true; // Default to requiring verification on error
-    }
+    // Phone verification is optional - can be implemented later
+    // For now, return false to skip phone verification
+    return false;
   }
 };
